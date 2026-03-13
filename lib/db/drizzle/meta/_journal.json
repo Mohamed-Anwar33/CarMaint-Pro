@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1773428207632,
+      "tag": "0000_same_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773428783959,
+      "tag": "0001_gigantic_grandmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773430062935,
+      "tag": "0002_empty_beyonder",
+      "breakpoints": true
+    }
+  ]
+}

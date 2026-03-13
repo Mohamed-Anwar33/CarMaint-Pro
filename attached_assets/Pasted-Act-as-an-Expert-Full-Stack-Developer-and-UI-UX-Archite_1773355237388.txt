@@ -1,0 +1,43 @@
+Act as an Expert Full Stack Developer and UI/UX Architect. Build a modern, highly responsive SaaS web application named "CarMaint Pro" (صيانة سيارتي).
+
+Tech Stack: Next.js/React, Tailwind CSS, Shadcn UI, and Supabase (Auth, PostgreSQL, Storage).
+Language & Layout: The app MUST be strictly RTL (Right-to-Left) for Arabic. Use 'Cairo' font for Arabic text and 'Montserrat' for English text.
+
+### 1. Branding & Color Palette (Derived from Logo)
+- **Background/Base:** Deep Navy Blue (#0F172A) for the main background.
+- **Card Backgrounds:** Slate-800 (#1E293B) with subtle rounded corners (rounded-2xl) and soft glow effects on hover.
+- **Primary Accent (Buttons/Active states):** Vibrant Orange (#F97316) - highly cheerful and engaging.
+- **Secondary Accent:** Sky Blue (#38BDF8) for borders, subtle highlights, and secondary icons.
+- **Status Indicators:** Emerald Green (#10B981) for "Good", Amber Yellow (#F59E0B) for "Warning", Crimson Red (#EF4444) for "Overdue".
+- **Logo Integration:** I will provide a React component named `CarMaintLogo.tsx`. You MUST use it in the Navbar and Footer.
+
+### 2. Dynamic Announcements & Ads System (NEW)
+- **Super Admin Panel:** Create a CMS-like section where the Admin can Add, Edit, and Delete announcements/offers. It should have simple fields (Title, Message, Type: 'Offer' or 'Update').
+- **Automatic Styling:** The system must automatically format these announcements into beautiful, premium-looking cards or banners without requiring HTML knowledge from the admin.
+- **User Display:** Show these active announcements as a sleek, auto-sliding carousel or a prominent top banner on BOTH the Landing Page and the top of the User Dashboard.
+
+### 3. Multi-Role Authentication & Logic
+- Use Supabase Auth.
+- **Roles:** 'Manager' (ولي الأمر) and 'Driver' (السائق).
+- The Manager can invite a Driver to a specific car via Email/Phone.
+- Create a Tabbed Navigation for users holding both roles: "Manager Dashboard" | "Driver Dashboard".
+
+### 4. The Onboarding Wizard (Strict Requirements)
+Force new users (Individuals/Managers) through a beautiful step-by-step wizard to add their first car:
+- **Step 1: Vehicle Specs:** Car Name, Model Year, Transmission Type, Engine Oil Type (Dropdown: 5000 KM or 10000 KM).
+- **Step 2: Liquids:** Coolant fill date. (Logic: Auto-calculate 6 months from this date for the next alert).
+- **Step 3: Documents:** Expiry dates for Vehicle Registration (رخصة السير), Driving License, Insurance, and Periodic Inspection.
+- **Step 4: Battery & Tires:** Installation dates & Warranty durations. 
+  - *Upsell Feature:* Show an "Upload Invoice" button, but visually lock it with a "Pro/Crown icon" for Free plan users. Clicking it opens an "Upgrade to Pro" modal.
+
+### 5. Dashboards UI/UX
+- **Driver Dashboard:** Can ONLY see assigned cars. Must display a prominent card/modal to input "Current Mileage", select "Oil Levels" (Normal/Low), and check general car health (Tires, Brakes, AC) using Green/Yellow/Red toggle buttons.
+- **Manager Dashboard:** A high-level grid of all cars in the family/fleet. Can view driver submissions.
+- **Escalation Logic:** Display a massive Red Alert on the Manager's dashboard if a Driver fails to fill their maintenance form 48 hours after the due date.
+
+### 6. Pricing & Paywall Section
+Build a beautiful pricing table:
+- Free: 1 Car, basic alerts.
+- Individual Pro: 9 SAR/mo or 99 SAR/yr (Unlocks invoice uploads).
+- Family Small: 199 SAR/yr (3 Cars, Manager/Driver roles).
+- Family Large: 299 SAR/yr (5 Cars, Manager/Driver roles).

@@ -1,0 +1,29 @@
+{
+  "name": "صيانة سيارتي - CarMaint Pro",
+  "short_name": "CarMaint",
+  "description": "تتبع صيانة سيارتك، إدارة وثائقها، ومتابعة السائقين بكل سهولة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#F97316",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "لوحة القيادة",
+      "url": "/dashboard",
+      "description": "افتح لوحة القيادة"
+    }
+  ]
+}

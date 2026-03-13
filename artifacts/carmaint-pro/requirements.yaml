@@ -1,0 +1,16 @@
+packages:
+  "framer-motion": "For page transitions, carousel animations, and polished UI interactions"
+  "date-fns": "For localized Arabic date formatting and calculations"
+  "clsx": "For conditional class names"
+  "tailwind-merge": "For merging tailwind classes safely"
+  "@hookform/resolvers": "For Zod form validation"
+
+images:
+  - path: "artifacts/carmaint-pro/public/images/hero-bg.png"
+    description: "Deep navy blue abstract modern background with subtle glowing orange and sky blue light leaks, tech-focused but clean, geometric patterns"
+    aspect_ratio: "16:9"
+
+notes:
+  - Auth is mocked in frontend via localStorage for now as requested.
+  - Using logical CSS properties (ms-, me-, ps-, pe-) and flex gap for RTL layout compatibility.
+  - Relying on @workspace/api-client-react for generated API hooks and keys.

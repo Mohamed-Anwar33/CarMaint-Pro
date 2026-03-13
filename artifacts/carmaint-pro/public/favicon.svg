@@ -1,0 +1,21 @@
+<svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="36" cy="36" r="34" fill="#0f172a" stroke="#38bdf8" stroke-width="2.5" />
+  <path
+    d="M47.5 19.5C44.2 16.2 39.5 15 35.2 16.5L40.5 21.8L38 27.5L32.3 30L27 24.7
+       C25.5 29 26.7 33.7 30 37C33.3 40.3 37.9 41.5 42.2 40.2L52.8 50.8
+       C54.1 52.1 56.2 52.1 57.5 50.8C58.8 49.5 58.8 47.4 57.5 46.1L46.9 35.5
+       C48.2 31.2 47 26.6 43.7 23.3L47.5 19.5Z"
+    fill="#38bdf8"
+    stroke="#7dd3fc"
+    stroke-width="1"
+    stroke-linejoin="round"
+  />
+  <g>
+    <circle cx="22" cy="50" r="5" fill="none" stroke="#f97316" stroke-width="2" />
+    <circle cx="22" cy="50" r="2"  fill="#f97316" />
+    <rect x="21" y="43.5" width="2" height="3" rx="1" fill="#f97316" />
+    <rect x="21" y="53.5" width="2" height="3" rx="1" fill="#f97316" />
+    <rect x="15" y="49" width="3" height="2" rx="1" fill="#f97316" />
+    <rect x="26" y="49" width="3" height="2" rx="1" fill="#f97316" />
+  </g>
+</svg>

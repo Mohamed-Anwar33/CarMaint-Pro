@@ -1,0 +1,41 @@
+modules = ["nodejs-24", "postgresql-16"]
+
+[[artifacts]]
+id = "artifacts/api-server"
+
+[[artifacts]]
+id = "artifacts/mockup-sandbox"
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+VITE_SUPABASE_URL = "https://lmkutuybfpglfkfxiwns.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxta3V0dXliZnBnbGZrZnhpd25zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTQ5MTEsImV4cCI6MjA4ODkzMDkxMX0.aiVnyjWij99Jx_OZ9hlQ2ZOBlcb47gugoWh-coPAS-U"
+SUPABASE_URL = "https://lmkutuybfpglfkfxiwns.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxta3V0dXliZnBnbGZrZnhpd25zIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzM1NDkxMSwiZXhwIjoyMDg4OTMwOTExfQ.jeutLWWGbdxsS0mU7-Sr3xOxDB3C11Edl3Ixy_mmvl0"
+VAPID_PUBLIC_KEY = "BHXbMqnd5cMYsSwdf157IVRB9q9tLBLwB-g8-5d1dAWISKVK-Yf_UKsQ_YEmNWYyseB6KCA8x4EP0PZRQYJrXFo"
+VAPID_PRIVATE_KEY = "m7sB6nbAsz7aon6T2s_CGrq1bXtbEAq0R98bMUpqZCo"
+VAPID_EMAIL = "mailto:admin@carmaint.sa"
+VITE_VAPID_PUBLIC_KEY = "BHXbMqnd5cMYsSwdf157IVRB9q9tLBLwB-g8-5d1dAWISKVK-Yf_UKsQ_YEmNWYyseB6KCA8x4EP0PZRQYJrXFo"

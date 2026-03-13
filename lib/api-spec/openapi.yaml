@@ -1,0 +1,585 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: CarMaint Pro API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: cars
+    description: Car management
+  - name: announcements
+    description: Announcements and offers
+  - name: maintenance
+    description: Maintenance records
+  - name: driver-reports
+    description: Driver health reports
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  /users/profile:
+    put:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /cars:
+    get:
+      operationId: getCars
+      tags: [cars]
+      summary: Get all cars for the current user
+      responses:
+        "200":
+          description: List of cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Car"
+    post:
+      operationId: createCar
+      tags: [cars]
+      summary: Create a new car
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCarRequest"
+      responses:
+        "201":
+          description: Car created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+
+  /cars/{carId}:
+    get:
+      operationId: getCar
+      tags: [cars]
+      summary: Get a specific car
+      parameters:
+        - name: carId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Car details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+    put:
+      operationId: updateCar
+      tags: [cars]
+      summary: Update a car
+      parameters:
+        - name: carId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCarRequest"
+      responses:
+        "200":
+          description: Car updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Car"
+
+  /cars/{carId}/invite-driver:
+    post:
+      operationId: inviteDriver
+      tags: [cars]
+      summary: Invite a driver to a car
+      parameters:
+        - name: carId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteDriverRequest"
+      responses:
+        "200":
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteDriverResponse"
+
+  /announcements:
+    get:
+      operationId: getAnnouncements
+      tags: [announcements]
+      summary: Get active announcements
+      responses:
+        "200":
+          description: List of announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+    post:
+      operationId: createAnnouncement
+      tags: [announcements]
+      summary: Create an announcement (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnnouncementRequest"
+      responses:
+        "201":
+          description: Announcement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /announcements/{announcementId}:
+    put:
+      operationId: updateAnnouncement
+      tags: [announcements]
+      summary: Update an announcement (admin only)
+      parameters:
+        - name: announcementId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnnouncementRequest"
+      responses:
+        "200":
+          description: Announcement updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+    delete:
+      operationId: deleteAnnouncement
+      tags: [announcements]
+      summary: Delete an announcement (admin only)
+      parameters:
+        - name: announcementId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /driver-reports:
+    get:
+      operationId: getDriverReports
+      tags: [driver-reports]
+      summary: Get driver reports (manager view)
+      responses:
+        "200":
+          description: List of driver reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriverReport"
+    post:
+      operationId: submitDriverReport
+      tags: [driver-reports]
+      summary: Submit a driver health report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriverReportRequest"
+      responses:
+        "201":
+          description: Report submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverReport"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [manager, driver, admin, both]
+        plan:
+          type: string
+          enum: [free, pro, family_small, family_large]
+        onboardingCompleted:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - email
+        - role
+        - plan
+        - onboardingCompleted
+        - createdAt
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+
+    Car:
+      type: object
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        driverId:
+          type: string
+          nullable: true
+        name:
+          type: string
+        modelYear:
+          type: integer
+        transmissionType:
+          type: string
+          enum: [automatic, manual]
+        engineOilType:
+          type: string
+          enum: [5000km, 10000km]
+        coolantFillDate:
+          type: string
+          nullable: true
+        coolantNextAlertDate:
+          type: string
+          nullable: true
+        registrationExpiry:
+          type: string
+          nullable: true
+        licenseExpiry:
+          type: string
+          nullable: true
+        insuranceExpiry:
+          type: string
+          nullable: true
+        inspectionExpiry:
+          type: string
+          nullable: true
+        batteryInstallDate:
+          type: string
+          nullable: true
+        batteryWarrantyMonths:
+          type: integer
+          nullable: true
+        tireInstallDate:
+          type: string
+          nullable: true
+        tireWarrantyMonths:
+          type: integer
+          nullable: true
+        lastMileage:
+          type: integer
+          nullable: true
+        nextOilChangeMileage:
+          type: integer
+          nullable: true
+        driverName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - ownerId
+        - name
+        - modelYear
+        - transmissionType
+        - engineOilType
+        - createdAt
+
+    CreateCarRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        modelYear:
+          type: integer
+        transmissionType:
+          type: string
+          enum: [automatic, manual]
+        engineOilType:
+          type: string
+          enum: [5000km, 10000km]
+        coolantFillDate:
+          type: string
+          nullable: true
+        registrationExpiry:
+          type: string
+          nullable: true
+        licenseExpiry:
+          type: string
+          nullable: true
+        insuranceExpiry:
+          type: string
+          nullable: true
+        inspectionExpiry:
+          type: string
+          nullable: true
+        batteryInstallDate:
+          type: string
+          nullable: true
+        batteryWarrantyMonths:
+          type: integer
+          nullable: true
+        tireInstallDate:
+          type: string
+          nullable: true
+        tireWarrantyMonths:
+          type: integer
+          nullable: true
+        lastMileage:
+          type: integer
+          nullable: true
+      required:
+        - name
+        - modelYear
+        - transmissionType
+        - engineOilType
+
+    UpdateCarRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        lastMileage:
+          type: integer
+        registrationExpiry:
+          type: string
+          nullable: true
+        licenseExpiry:
+          type: string
+          nullable: true
+        insuranceExpiry:
+          type: string
+          nullable: true
+        inspectionExpiry:
+          type: string
+          nullable: true
+
+    InviteDriverRequest:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+        - email
+
+    InviteDriverResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [offer, update]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - message
+        - type
+        - active
+        - createdAt
+
+    CreateAnnouncementRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [offer, update]
+        active:
+          type: boolean
+      required:
+        - title
+        - message
+        - type
+
+    DriverReport:
+      type: object
+      properties:
+        id:
+          type: string
+        carId:
+          type: string
+        driverId:
+          type: string
+        currentMileage:
+          type: integer
+        oilLevel:
+          type: string
+          enum: [normal, low]
+        tiresStatus:
+          type: string
+          enum: [green, yellow, red]
+        brakesStatus:
+          type: string
+          enum: [green, yellow, red]
+        acStatus:
+          type: string
+          enum: [green, yellow, red]
+        notes:
+          type: string
+          nullable: true
+        submittedAt:
+          type: string
+      required:
+        - id
+        - carId
+        - driverId
+        - currentMileage
+        - oilLevel
+        - tiresStatus
+        - brakesStatus
+        - acStatus
+        - submittedAt
+
+    CreateDriverReportRequest:
+      type: object
+      properties:
+        carId:
+          type: string
+        currentMileage:
+          type: integer
+        oilLevel:
+          type: string
+          enum: [normal, low]
+        tiresStatus:
+          type: string
+          enum: [green, yellow, red]
+        brakesStatus:
+          type: string
+          enum: [green, yellow, red]
+        acStatus:
+          type: string
+          enum: [green, yellow, red]
+        notes:
+          type: string
+          nullable: true
+      required:
+        - carId
+        - currentMileage
+        - oilLevel
+        - tiresStatus
+        - brakesStatus
+        - acStatus
