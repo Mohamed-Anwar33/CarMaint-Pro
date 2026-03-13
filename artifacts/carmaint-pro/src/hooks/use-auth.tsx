@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { api } from "@/lib/api";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export type UserRole = "manager" | "driver" | "both" | "admin";
@@ -30,13 +29,57 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * Fetches the user profile from our API server (/api/auth/me).
+ * Fetches the user profile from Supabase directly instead of an API server.
  * This syncs the Supabase user to our local PostgreSQL DB on first login.
  */
-async function fetchProfile(): Promise<AppUser | null> {
+async function fetchProfile(userId: string, email: string): Promise<AppUser | null> {
   try {
-    const profile = await api.get<AppUser>("/api/auth/me");
-    return profile;
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (user) {
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role as UserRole,
+        plan: user.plan as UserPlan,
+        onboardingCompleted: user.onboarding_completed,
+        createdAt: user.created_at,
+      };
+    }
+    
+    // User profile not found, create one locally via frontend (assuming RLS allows or handles it)
+    const { data: newUser, error: insertError } = await supabase
+      .from("users")
+      .insert({
+        id: userId,
+        email: email,
+        name: null,
+        role: "manager",
+        plan: "free",
+        onboarding_completed: false,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("fetchProfile insert error:", insertError);
+      return null;
+    }
+
+    return {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      role: newUser.role as UserRole,
+      plan: newUser.plan as UserPlan,
+      onboardingCompleted: newUser.onboarding_completed,
+      createdAt: newUser.created_at,
+    };
   } catch (err) {
     console.error("fetchProfile error:", err);
     return null;
@@ -52,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         setSupabaseUser(session.user);
-        const profile = await fetchProfile();
+        const profile = await fetchProfile(session.user.id, session.user.email || "");
         setUser(profile);
       }
       setIsLoading(false);
@@ -62,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setSupabaseUser(session.user);
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          const profile = await fetchProfile();
+          const profile = await fetchProfile(session.user.id, session.user.email || "");
           setUser(profile);
         }
       } else {
@@ -82,10 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw new Error(error.message);
       
       if (data.session?.user) {
-        // Force the cached token to update so api.ts uses it instantly
-        api.setCachedToken?.(data.session.access_token);
         setSupabaseUser(data.session.user);
-        const profile = await fetchProfile();
+        const profile = await fetchProfile(data.session.user.id, data.session.user.email || "");
         if (!profile) {
           throw new Error("Failed to load user profile");
         }
@@ -106,7 +147,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (error) throw new Error(error.message);
       if (!data.user) throw new Error("فشل في إنشاء الحساب");
-      // Profile will be auto-created in local DB when the user first calls /api/auth/me
+      
+      // Explicitly create profile here since frontend handles logic
+      const { error: insertErr } = await supabase.from("users").insert({
+        id: data.user.id,
+        email: email,
+        name: name,
+        role: role,
+        plan: "free",
+        onboarding_completed: false
+      });
+      if (insertErr) {
+        console.error("Failed to create user profile row:", insertErr);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -119,14 +172,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = async () => {
-    const profile = await fetchProfile();
+    if (!supabaseUser) return;
+    const profile = await fetchProfile(supabaseUser.id, supabaseUser.email || "");
     setUser(profile);
   };
 
   const updateUser = async (updates: Partial<AppUser>) => {
-    if (!user) return;
+    if (!user || !supabaseUser) return;
     try {
-      await api.patch("/api/auth/profile", updates);
+      const { error } = await supabase.from("users").update({
+        name: updates.name,
+        role: updates.role,
+        plan: updates.plan,
+        onboarding_completed: updates.onboardingCompleted
+      }).eq("id", supabaseUser.id);
+      
+      if (error) throw error;
       setUser(prev => prev ? { ...prev, ...updates } : null);
     } catch (err: unknown) {
       throw new Error(err instanceof Error ? err.message : "فشل في تحديث الملف الشخصي");

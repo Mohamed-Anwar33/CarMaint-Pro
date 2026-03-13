@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -62,13 +62,14 @@ export function useNotifications(): UseNotificationsReturn {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
-      const res = await fetch(`${API_BASE}/api/notifications/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: sub.toJSON(), userId }),
-      });
+      const { error } = await supabase.from("push_subscriptions").upsert({
+        user_id: userId,
+        endpoint: sub.endpoint,
+        keys: sub.toJSON().keys,
+      }, { onConflict: "endpoint" });
 
-      if (res.ok) { setStatus("subscribed"); return true; }
+      if (!error) { setStatus("subscribed"); return true; }
+      console.error("Failed to save push subscription to Supabase:", error);
       return false;
     } catch (err) {
       console.error("Push subscribe error:", err);
@@ -81,11 +82,7 @@ export function useNotifications(): UseNotificationsReturn {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
-        await fetch(`${API_BASE}/api/notifications/unsubscribe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
-        });
+        await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
         await sub.unsubscribe();
       }
       setStatus("not-subscribed");

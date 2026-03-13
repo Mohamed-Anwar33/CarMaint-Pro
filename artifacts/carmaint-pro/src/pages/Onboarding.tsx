@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, ShieldAlert, CalendarClock, ChevronLeft, ChevronRight, CheckCircle2, Lock, Crown, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 
 type TransmissionType = "automatic" | "manual";
 type EngineOilType = "5000km" | "10000km" | "custom";
@@ -45,11 +45,26 @@ export default function Onboarding() {
       setCheckingLimit(false);
       return;
     }
-    api.get<any[]>("/api/cars").then(cars => {
-      const limit = user.plan === "family_large" ? Infinity : user.plan === "family_small" ? 5 : 1;
-      if (cars.length >= limit) setLimitReached(true);
-      setCheckingLimit(false);
-    }).catch(() => setCheckingLimit(false));
+    
+    async function checkCarsLimit() {
+      try {
+        const { count, error } = await supabase
+          .from("cars")
+          .select("*", { count: 'exact', head: true })
+          .eq("owner_id", user!.id);
+          
+        if (error) throw error;
+        
+        const limit = user!.plan === "family_large" ? Infinity : user!.plan === "family_small" ? 5 : 1;
+        if ((count || 0) >= limit) setLimitReached(true);
+      } catch (err) {
+        console.error("Failed to check cars limit:", err);
+      } finally {
+        setCheckingLimit(false);
+      }
+    }
+    
+    checkCarsLimit();
   }, [user]);
 
   const [formData, setFormData] = useState<CarFormData>({
@@ -86,28 +101,39 @@ export default function Onboarding() {
     setIsSubmitting(true);
     setError("");
     try {
-      await api.post("/api/cars", {
+      const { error: insertError } = await supabase.from("cars").insert({
+        owner_id: user.id,
         name: formData.name,
-        modelYear: formData.modelYear,
-        transmissionType: formData.transmissionType,
-        engineOilType: formData.engineOilType,
-        coolantFillDate: formData.coolantFillDate || null,
-        registrationExpiry: formData.registrationExpiry || null,
-        insuranceExpiry: formData.insuranceExpiry || null,
-        inspectionExpiry: formData.inspectionExpiry || null,
-        batteryInstallDate: formData.batteryInstallDate || null,
-        batteryWarrantyMonths: formData.batteryWarrantyMonths || null,
-        tireInstallDate: formData.tireInstallDate || null,
-        tireWarrantyMonths: formData.tireWarrantyMonths || null,
-        tireSize: formData.tireSize || null,
-        lastMileage: formData.lastMileage || null,
-        plateNumber: formData.plateNumber || null,
+        model_year: formData.modelYear,
+        transmission_type: formData.transmissionType,
+        engine_oil_type: formData.engineOilType,
+        coolant_fill_date: formData.coolantFillDate || null,
+        registration_expiry: formData.registrationExpiry || null,
+        insurance_expiry: formData.insuranceExpiry || null,
+        inspection_expiry: formData.inspectionExpiry || null,
+        battery_install_date: formData.batteryInstallDate || null,
+        battery_warranty_months: formData.batteryWarrantyMonths || null,
+        tire_install_date: formData.tireInstallDate || null,
+        tire_warranty_months: formData.tireWarrantyMonths || null,
+        tire_size: formData.tireSize || null,
+        last_mileage: formData.lastMileage || null,
+        plate_number: formData.plateNumber || null,
         notes: formData.notes || null,
-        engineOilCustomDays: formData.engineOilType === 'custom' ? formData.engineOilCustomDays : null,
-        engineOilCustomKm: formData.engineOilType === 'custom' ? formData.engineOilCustomKm : null,
-        batteryBrand: formData.batteryBrand || null,
+        engine_oil_custom_days: formData.engineOilType === 'custom' ? formData.engineOilCustomDays : null,
+        engine_oil_custom_km: formData.engineOilType === 'custom' ? formData.engineOilCustomKm : null,
+        battery_brand: formData.batteryBrand || null,
       });
-      // onboardingCompleted is set server-side when car is created; refresh local user state
+
+      if (insertError) throw insertError;
+
+      // Update onboarding status
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ onboarding_completed: true })
+        .eq("id", user.id);
+        
+      if (updateError) throw updateError;
+
       await refreshUser();
       setLocation("/dashboard");
     } catch (err: unknown) {

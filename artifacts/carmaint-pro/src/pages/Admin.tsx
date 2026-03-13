@@ -4,7 +4,7 @@ import {
   Users, Megaphone, Plus, Trash2, Edit2, Shield, CheckCircle, XCircle,
   BarChart3, Car, Bell, Search, Crown, ChevronDown, Save, X, RefreshCw
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import type { UserRole, UserPlan } from "@/hooks/use-auth";
 
@@ -46,12 +46,31 @@ export default function Admin() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [usersData, annData] = await Promise.all([
-        api.get<Profile[]>("/api/users"),
-        api.get<Announcement[]>("/api/announcements"),
+      const [usersRes, annRes] = await Promise.all([
+        supabase.from("users").select("*"),
+        supabase.from("announcements").select("*").order("created_at", { ascending: false }),
       ]);
-      setProfiles(usersData);
-      setAnnouncements(annData);
+      
+      if (usersRes.error) throw usersRes.error;
+      if (annRes.error) throw annRes.error;
+
+      // Group counting cars could be done with a view or separate query, 
+      // but for simplicity we keep it without carsCount for now in the admin table
+      const formattedUsers = usersRes.data.map(u => ({
+        id: u.id, email: u.email, name: u.name,
+        role: u.role as UserRole, plan: u.plan as UserPlan, 
+        onboardingCompleted: u.onboarding_completed, 
+        createdAt: u.created_at
+      }));
+
+      const formattedAnns = annRes.data.map(a => ({
+        id: a.id, title: a.title, message: a.message, 
+        type: a.type as "offer" | "update", active: a.active, 
+        createdAt: a.created_at
+      }));
+
+      setProfiles(formattedUsers);
+      setAnnouncements(formattedAnns);
     } catch (err) {
       console.error("Failed to fetch admin data:", err);
       showToast("فشل في تحميل البيانات", "error");
@@ -63,7 +82,8 @@ export default function Admin() {
 
   const updateUserRole = async (userId: string, role: UserRole) => {
     try {
-      await api.patch(`/api/users/${userId}`, { role });
+      const { error } = await supabase.from("users").update({ role }).eq("id", userId);
+      if (error) throw error;
       setProfiles(prev => prev.map(p => p.id === userId ? { ...p, role } : p));
       showToast("تم تحديث الدور بنجاح");
     } catch { showToast("حدث خطأ أثناء التحديث", "error"); }
@@ -71,7 +91,8 @@ export default function Admin() {
 
   const updateUserPlan = async (userId: string, plan: UserPlan) => {
     try {
-      await api.patch(`/api/users/${userId}`, { plan });
+      const { error } = await supabase.from("users").update({ plan }).eq("id", userId);
+      if (error) throw error;
       setProfiles(prev => prev.map(p => p.id === userId ? { ...p, plan } : p));
       showToast("تم تحديث الخطة بنجاح");
     } catch { showToast("حدث خطأ أثناء التحديث", "error"); }
@@ -82,12 +103,14 @@ export default function Admin() {
     setSaving(true);
     try {
       if (editingAnnouncement) {
-        const updated = await api.put<Announcement>(`/api/announcements/${editingAnnouncement.id}`, announcementForm);
-        setAnnouncements(prev => prev.map(a => a.id === editingAnnouncement.id ? updated : a));
+        const { data, error } = await supabase.from("announcements").update(announcementForm).eq("id", editingAnnouncement.id).select().single();
+        if (error) throw error;
+        setAnnouncements(prev => prev.map(a => a.id === editingAnnouncement.id ? { ...a, ...data, createdAt: data.created_at } : a));
         showToast("تم التحديث بنجاح");
       } else {
-        const created = await api.post<Announcement>("/api/announcements", announcementForm);
-        setAnnouncements(prev => [created, ...prev]);
+        const { data, error } = await supabase.from("announcements").insert(announcementForm).select().single();
+        if (error) throw error;
+        setAnnouncements(prev => [{ id: data.id, title: data.title, message: data.message, type: data.type, active: data.active, createdAt: data.created_at }, ...prev]);
         showToast("تم إضافة الإعلان بنجاح");
       }
       setShowAnnouncementForm(false);
@@ -99,7 +122,8 @@ export default function Admin() {
 
   const deleteAnnouncement = async (id: string) => {
     try {
-      await api.delete(`/api/announcements/${id}`);
+      const { error } = await supabase.from("announcements").delete().eq("id", id);
+      if (error) throw error;
       setAnnouncements(prev => prev.filter(a => a.id !== id));
       showToast("تم حذف الإعلان");
     } catch { showToast("حدث خطأ", "error"); }
@@ -491,9 +515,22 @@ function CarsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<(CarData & { ownerName?: string })[]>("/api/cars/all")
-      .then(data => { setCars(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    const fetchAllCars = async () => {
+      try {
+        const { data, error } = await supabase.from("cars").select("*, users!cars_owner_id_fkey(name)").order("created_at", { ascending: false });
+        if (error) throw error;
+        if (data) {
+          setCars(data.map((c: any) => ({
+             id: c.id, name: c.name, ownerId: c.owner_id, modelYear: c.model_year, createdAt: c.created_at, ownerName: c.users?.name || "—" 
+          })));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllCars();
   }, []);
 
   if (loading) return <div className="flex justify-center py-16"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;

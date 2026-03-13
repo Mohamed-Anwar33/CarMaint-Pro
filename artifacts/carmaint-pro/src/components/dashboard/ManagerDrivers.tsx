@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Mail, Car, Clock, CheckCircle, Trash2, UserMinus } from "lucide-react";
-import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 type DriverData = {
@@ -14,6 +15,7 @@ type DriverData = {
 };
 
 export function ManagerDrivers() {
+  const { user } = useAuth();
   const [drivers, setDrivers] = useState<DriverData[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -24,10 +26,56 @@ export function ManagerDrivers() {
   }, []);
 
   const fetchDrivers = async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const data = await api.get<DriverData[]>("/api/users/my-drivers");
-      setDrivers(data);
+      const userDrivers: DriverData[] = [];
+
+      // 1. Fetch pending invitations sent by this manager
+      const { data: invites, error: invitesErr } = await supabase
+        .from("invitations")
+        .select("id, invited_email, status, car_id, cars(name)")
+        .eq("invited_by", user.id)
+        .eq("status", "pending");
+
+      if (invitesErr) throw invitesErr;
+      
+      if (invites) {
+        invites.forEach((inv: any) => {
+          userDrivers.push({
+            id: inv.id,
+            email: inv.invited_email,
+            name: "سائق مدعو",
+            status: "pending",
+            carId: inv.car_id,
+            carName: inv.cars?.name || "سيارة",
+          });
+        });
+      }
+
+      // 2. Fetch registered drivers (users assigned to cars owned by this manager)
+      const { data: cars, error: carsErr } = await supabase
+        .from("cars")
+        .select("id, name, driver_id, driver_name, users!cars_driver_id_fkey(email)")
+        .eq("owner_id", user.id)
+        .not("driver_id", "is", null);
+
+      if (carsErr) throw carsErr;
+
+      if (cars) {
+        cars.forEach((car: any) => {
+          userDrivers.push({
+            id: car.driver_id,
+            email: car.users?.email || "",
+            name: car.driver_name || "سائق",
+            status: "registered",
+            carId: car.id,
+            carName: car.name,
+          });
+        });
+      }
+
+      setDrivers(userDrivers);
     } catch (err) {
       console.error("Failed to fetch drivers:", err);
       toast({ title: "خطأ", description: "لم نتمكن من جلب بيانات السائقين", variant: "destructive" });
@@ -40,7 +88,8 @@ export function ManagerDrivers() {
     if (!confirm("هل أنت متأكد من إلغاء هذه الدعوة؟")) return;
     setActionLoading(inviteId);
     try {
-      await api.delete(`/api/users/invitations/${inviteId}`);
+      const { error } = await supabase.from("invitations").delete().eq("id", inviteId);
+      if (error) throw error;
       toast({ title: "تم", description: "تم إلغاء الدعوة بنجاح" });
       await fetchDrivers();
     } catch (err) {
@@ -55,7 +104,12 @@ export function ManagerDrivers() {
     if (!confirm("هل أنت متأكد من إزالة هذا السائق من السيارة؟")) return;
     setActionLoading(`${carId}-${driverId}`);
     try {
-      await api.post(`/api/cars/${carId}/remove-driver`, {});
+      const { error } = await supabase
+        .from("cars")
+        .update({ driver_id: null, driver_name: null })
+        .eq("id", carId);
+        
+      if (error) throw error;
       toast({ title: "تم", description: "تمت إزالة السائق من السيارة بنجاح" });
       await fetchDrivers();
     } catch (err) {

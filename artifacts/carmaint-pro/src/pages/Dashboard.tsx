@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/use-auth";
-import { api } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { Car, Settings, AlertTriangle, Plus, PenTool, CheckCircle, Mail, Gauge, Bell, Crown, Trash2, Edit2, UserPlus, X, Save, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
@@ -67,10 +67,21 @@ function ManagerReports() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<any[]>("/api/cars/reports")
-      .then(res => setReports(res))
-      .catch(err => console.error("Error fetching reports", err))
-      .finally(() => setLoading(false));
+    const fetchReports = async () => {
+      try {
+        const { data, error } = await supabase.from("reports").select("*, cars(name, driver_name)").order("created_at", { ascending: false });
+        if(error) throw error;
+        setReports(data.map((r: any) => ({
+          ...r,
+          car: { name: r.cars?.name, driver_name: r.cars?.driver_name }
+        })));
+      } catch (err) {
+        console.error("Error fetching reports", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
   }, []);
 
   if (loading) return (
@@ -190,15 +201,23 @@ export default function Dashboard() {
       
       const registration = await navigator.serviceWorker.ready;
       
-      const { publicKey } = await api.get<{publicKey: string}>("/api/push/public-key");
-      const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+      // Removed the custom backend VAPID key fetch, replaced with the env variable directly
+      const convertedVapidKey = urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || "");
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedVapidKey
       });
 
-      await api.post("/api/push/subscribe", subscription.toJSON());
+      const { data: { session } } = await supabase.auth.getSession();
+      if(session?.user) {
+        await supabase.from("push_subscriptions").upsert({
+          user_id: session.user.id,
+          endpoint: subscription.endpoint,
+          keys: subscription.toJSON().keys
+        }, { onConflict: "endpoint" });
+      }
+      
       setPushEnabled(true);
       toast({ title: "تم التفعيل", description: "تم تفعيل الإشعارات التلقائية بنجاح.", variant: "default" });
     } catch (err: any) {
@@ -212,12 +231,27 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [carsData, annData] = await Promise.all([
-          api.get<CarData[]>("/api/cars"),
-          api.get<Announcement[]>("/api/announcements"),
+        const [carsRes, annRes] = await Promise.all([
+          // Only fetch cars linked to the user
+          supabase.from("cars").select("*").or(`owner_id.eq.${user.id},driver_id.eq.${user.id}`).order("created_at", { ascending: false }),
+          supabase.from("announcements").select("*").eq("active", true).order("created_at", { ascending: false }),
         ]);
-        setCars(carsData);
-        setAnnouncements(annData.filter(a => a.active));
+        if(carsRes.error) throw carsRes.error;
+        if(annRes.error) throw annRes.error;
+
+        setCars(carsRes.data.map(c => ({
+          id: c.id, ownerId: c.owner_id, driverId: c.driver_id, name: c.name,
+          modelYear: c.model_year, transmissionType: c.transmission_type as any, engineOilType: c.engine_oil_type as any,
+          registrationExpiry: c.registration_expiry, insuranceExpiry: c.insurance_expiry,
+          inspectionExpiry: c.inspection_expiry, batteryInstallDate: c.battery_install_date,
+          batteryBrand: c.battery_brand, tireSize: c.tire_size,
+          plateNumber: c.plate_number, notes: c.notes,
+          engineOilCustomDays: c.engine_oil_custom_days, engineOilCustomKm: c.engine_oil_custom_km,
+          driverName: c.driver_name, lastReportDate: c.last_report_date, createdAt: c.created_at
+        })));
+        setAnnouncements(annRes.data.map(a => ({
+          id: a.id, title: a.title, message: a.message, type: a.type as any, active: a.active
+        })));
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       }
@@ -554,22 +588,37 @@ function CarActionsMenu({ car, onUpdate, onDelete }: { car: CarData; onUpdate: (
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await api.put<CarData>(`/api/cars/${car.id}`, {
+      const dbCar = {
         name: editName,
-        modelYear: editModelYear ? parseInt(editModelYear as string) : null,
-        transmissionType: editTransmission,
-        engineOilType: editEngineOilType,
-        engineOilCustomDays: editEngineOilCustomDays ? parseInt(editEngineOilCustomDays as string) : null,
-        engineOilCustomKm: editEngineOilCustomKm ? parseInt(editEngineOilCustomKm as string) : null,
-        registrationExpiry: editRegExpiry || null,
-        insuranceExpiry: editInsExpiry || null,
-        inspectionExpiry: editInspExpiry || null,
-        plateNumber: editPlateNumber || null,
+        model_year: editModelYear ? parseInt(editModelYear as string) : null,
+        transmission_type: editTransmission,
+        engine_oil_type: editEngineOilType,
+        engine_oil_custom_days: editEngineOilCustomDays ? parseInt(editEngineOilCustomDays as string) : null,
+        engine_oil_custom_km: editEngineOilCustomKm ? parseInt(editEngineOilCustomKm as string) : null,
+        registration_expiry: editRegExpiry || null,
+        insurance_expiry: editInsExpiry || null,
+        inspection_expiry: editInspExpiry || null,
+        plate_number: editPlateNumber || null,
         notes: editNotes || null,
-        batteryBrand: editBatteryBrand || null,
-        tireSize: editTireSize || null,
-      });
-      onUpdate(updated);
+        battery_brand: editBatteryBrand || null,
+        tire_size: editTireSize || null,
+      };
+      
+      const { data, error } = await supabase.from("cars").update(dbCar).eq("id", car.id).select().single();
+      if(error) throw error;
+      
+      const mappedUpdated: CarData = {
+        id: data.id, ownerId: data.owner_id, driverId: data.driver_id, name: data.name,
+        modelYear: data.model_year, transmissionType: data.transmission_type as any, engineOilType: data.engine_oil_type as any,
+        registrationExpiry: data.registration_expiry, insuranceExpiry: data.insurance_expiry,
+        inspectionExpiry: data.inspection_expiry, batteryInstallDate: data.battery_install_date,
+        batteryBrand: data.battery_brand, tireSize: data.tire_size,
+        plateNumber: data.plate_number, notes: data.notes,
+        engineOilCustomDays: data.engine_oil_custom_days, engineOilCustomKm: data.engine_oil_custom_km,
+        driverName: data.driver_name, lastReportDate: data.last_report_date, createdAt: data.created_at
+      };
+
+      onUpdate(mappedUpdated);
       setShowEdit(false);
       toast({ title: "تم التحديث", description: "تم تحديث بيانات السيارة بنجاح" });
     } catch {
@@ -581,7 +630,8 @@ function CarActionsMenu({ car, onUpdate, onDelete }: { car: CarData; onUpdate: (
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete(`/api/cars/${car.id}`);
+      const { error } = await supabase.from("cars").delete().eq("id", car.id);
+      if(error) throw error;
       onDelete(car.id);
       toast({ title: "تم الحذف", description: "تم حذف السيارة بنجاح" });
     } catch {
@@ -801,9 +851,55 @@ function InviteDriverButton({ carId, onInvited }: { carId: string; onInvited: (n
     setSubmitting(true);
     setError(null);
     try {
-      const result = await api.post<{ success: boolean; message: string }>(`/api/cars/${carId}/invite-driver`, { email });
-      onInvited(email);
-      toast({ title: "تم!", description: result.message });
+      const { data: { session } } = await supabase.auth.getSession();
+      if(!session?.user) throw new Error("يجب تسجيل الدخول");
+
+      // 1. Check if user with that email already exists
+      const { data: users, error: userError } = await supabase.from("users").select("id, name, role").eq("email", email).limit(1);
+      if(userError) throw userError;
+      
+      if(users && users.length > 0) {
+        // Driver already exists. Link immediately.
+        const driver = users[0];
+        
+        // Update user role to 'both' if they were 'manager' or 'admin', else 'driver'
+        const newRole = driver.role === "manager" || driver.role === "admin" ? "both" : "driver";
+        if(driver.role !== newRole) {
+           await supabase.from("users").update({ role: newRole }).eq("id", driver.id);
+        }
+
+        // Assign to car
+        const { error: carError } = await supabase.from("cars").update({
+          driver_id: driver.id,
+          driver_name: driver.name || "سائق"
+        }).eq("id", carId);
+
+        if(carError) throw carError;
+        
+        onInvited(driver.name || "سائق");
+        toast({ title: "تم!", description: "تم ربط السائق بالسيارة بنجاح (مستخدم مسجل مسبقاً)" });
+      } else {
+        // Driver does NOT exist. Create invitation.
+        const { error: invErr } = await supabase.from("invitations").insert({
+          car_id: carId,
+          invited_email: email,
+          invited_by: session.user.id
+        });
+        
+        if (invErr) {
+          if (invErr.code === '23505') {
+            throw new Error("هذا السائق لديه دعوة مسبقة قيد الانتظار لهذة السيارة");
+          }
+          throw invErr;
+        }
+
+        // Note: Edge functions / Supabase triggers can send the actual email, 
+        // For now, in a backend-less setup, the row insertion is enough to show pending.
+        
+        onInvited("سائق مدعو");
+        toast({ title: "تم!", description: "تم إرسال دعوة للمستخدم للتسجيل" });
+      }
+      
       setIsOpen(false);
       setEmail("");
     } catch (err: unknown) {
@@ -865,15 +961,28 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
       const dashboardLabel = toggles.dashboard === "green" ? "لا توجد" : toggles.dashboard === "yellow" ? "تحذير بسيط" : "تحذير خطير";
       const finalNotes = `[لوحة التحذيرات: ${dashboardLabel}]${notes ? `\nملاحظات السائق:\n${notes}` : ""}`;
       
-      await api.post("/api/driver-reports", {
-        carId,
-        currentMileage: parseInt(mileage),
-        oilLevel: oil === "very_low" ? "low" : oil,
-        tiresStatus: toggles.tires,
-        brakesStatus: toggles.brakes,
-        acStatus: toggles.ac,
+      const { data: { session } } = await supabase.auth.getSession();
+      if(!session?.user) throw new Error("يجب تسجيل الدخول");
+
+      const { data: carData } = await supabase.from("cars").select("owner_id").eq("id", carId).single();
+
+      const { error: reportErr } = await supabase.from("reports").insert({
+        car_id: carId,
+        driver_id: session.user.id,
+        owner_id: carData?.owner_id, // we might need to fetch this or maybe we don't strictly require it but let's just push it if available
+        mileage: parseInt(mileage),
+        engine_oil_status: oil === "very_low" ? "low" : oil,
+        tires_status: toggles.tires,
+        brakes_status: toggles.brakes,
+        ac_status: toggles.ac,
         notes: finalNotes || null,
       });
+
+      if(reportErr) throw reportErr;
+      
+      const now = new Date().toISOString();
+      const { error: carUpdErr } = await supabase.from("cars").update({ last_report_date: now }).eq("id", carId);
+      if(carUpdErr) throw carUpdErr;
       setSuccess(true);
       if (onReportSubmitted) onReportSubmitted(new Date().toISOString());
       setTimeout(() => { setIsOpen(false); setSuccess(false); setMileage(""); setNotes(""); }, 2000);
