@@ -40,10 +40,9 @@ export default function Landing() {
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl md:text-7xl font-black text-foreground tracking-tight leading-[1.3] mb-8"
+              className="text-4xl md:text-6xl lg:text-7xl font-black text-foreground tracking-tight leading-[1.4] md:leading-[1.3] mb-8"
             >
-              طريقك الأسهل <br className="hidden md:block" />
-              نحو صيانة <span className="gradient-text">ذكية وآمنة</span>
+              طريقك الأسهل نحو صيانة <span className="gradient-text whitespace-nowrap">ذكية وآمنة</span>
             </motion.h1>
             
             <motion.p 

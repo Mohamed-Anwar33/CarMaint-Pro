@@ -336,9 +336,9 @@ export default function Pricing() {
             <p className="text-muted-foreground font-medium">مصممة لصاحب السيارة الواحدة الذي يريد متابعة صيانة سيارته وتلقي تنبيهات في الوقت المناسب.</p>
           </div>
 
-          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
+          <div className="w-full overflow-x-auto glass-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem]">
             {/* Top Pricing Summary */}
-            <table className="w-full text-sm mb-12 min-w-[600px] border-collapse">
+            <table className="w-full text-sm mb-12 min-w-[400px] sm:min-w-[600px] border-collapse">
               <thead>
                 <tr>
                   <th className="bg-transparent p-4 border-b border-border"></th>
@@ -378,8 +378,8 @@ export default function Pricing() {
             <h3 className="text-xl font-bold text-foreground mb-6">جدول الميزات التفصيلي</h3>
 
             {/* Detailed Features Table */}
-            <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-sm min-w-[600px] border-collapse bg-white">
+            <div className="rounded-2xl border border-border overflow-hidden overflow-x-auto w-full">
+              <table className="w-full text-xs sm:text-sm min-w-[450px] sm:min-w-[600px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 text-right border-b border-border border-l w-[40%] font-bold">الميزة</th>
@@ -597,9 +597,9 @@ export default function Pricing() {
             <p className="text-muted-foreground font-medium">تابع جميع سيارات عائلتك من مكان واحد، مع نظام يُلزم السائق بتعبئة نموذج بعد كل تغيير زيت.</p>
           </div>
 
-          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
+          <div className="w-full overflow-x-auto glass-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem]">
             {/* Family Pricing Table */}
-            <table className="w-full text-sm mb-12 min-w-[600px] border-collapse">
+            <table className="w-full text-xs sm:text-sm mb-12 min-w-[500px] md:min-w-[600px] border-collapse">
               <thead>
                 <tr>
                   <th className="bg-transparent border-none w-[20%] p-4 text-right"></th>
@@ -643,8 +643,8 @@ export default function Pricing() {
 
             {/* Roles Table */}
             <h3 className="text-xl font-bold text-foreground mb-6">الأدوار في خطة العائلة</h3>
-            <div className="rounded-2xl border border-border overflow-hidden mb-12">
-              <table className="w-full text-sm min-w-[600px] border-collapse bg-white">
+            <div className="rounded-2xl border border-border overflow-hidden mb-12 overflow-x-auto w-full">
+              <table className="w-full text-xs sm:text-sm min-w-[500px] md:min-w-[600px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[25%] font-bold text-right">الدور</th>
@@ -669,8 +669,8 @@ export default function Pricing() {
 
             {/* Alerts Table */}
             <h3 className="text-xl font-bold text-foreground mb-6">آلية الإلزام والتنبيه</h3>
-            <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-sm mb-4 min-w-[600px] border-collapse bg-white">
+            <div className="rounded-2xl border border-border overflow-hidden overflow-x-auto w-full">
+              <table className="w-full text-xs sm:text-sm mb-4 min-w-[450px] sm:min-w-[600px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[10%] font-bold text-center">#</th>
@@ -722,9 +722,9 @@ export default function Pricing() {
           </div>
 
           {/* Comprehensive Comparison Table */}
-          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
-            <div className="rounded-2xl border border-border overflow-hidden">
-              <table className="w-full text-sm min-w-[800px] border-collapse bg-white">
+          <div className="w-full overflow-x-auto glass-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem]">
+            <div className="rounded-2xl border border-border overflow-hidden overflow-x-auto w-full">
+              <table className="w-full text-xs sm:text-sm min-w-[700px] md:min-w-[800px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[22%] font-bold text-right">الميزة</th>
