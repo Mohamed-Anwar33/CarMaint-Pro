@@ -51,8 +51,13 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
         createdAt: user.created_at,
       };
     }
+
+    // If error is not "row not found", it might be RLS — log but don't crash
+    if (error && error.code !== 'PGRST116') {
+      console.warn("fetchProfile select error (might be RLS):", error);
+    }
     
-    // User profile not found, create one locally via frontend (assuming RLS allows or handles it)
+    // User profile not found, try to create one
     const { data: newUser, error: insertError } = await supabase
       .from("users")
       .insert({
@@ -67,8 +72,17 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       .single();
 
     if (insertError) {
-      console.error("fetchProfile insert error:", insertError);
-      return null;
+      console.warn("fetchProfile insert error:", insertError);
+      // Return a minimal fallback user so login doesn't hang
+      return {
+        id: userId,
+        email: email,
+        name: null,
+        role: "manager" as UserRole,
+        plan: "free" as UserPlan,
+        onboardingCompleted: false,
+        createdAt: new Date().toISOString(),
+      };
     }
 
     return {
@@ -81,9 +95,17 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       createdAt: newUser.created_at,
     };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    console.error("fetchProfile error (check Netlify environment variables or clear cache):", err);
-    throw new Error(`PROFILE_ERROR: ${errorMsg}`);
+    console.error("fetchProfile error:", err);
+    // Return a minimal fallback user instead of throwing
+    return {
+      id: userId,
+      email: email,
+      name: null,
+      role: "manager" as UserRole,
+      plan: "free" as UserPlan,
+      onboardingCompleted: false,
+      createdAt: new Date().toISOString(),
+    };
   }
 }
 
@@ -113,19 +135,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        if (mounted) setSupabaseUser(session.user);
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          const profile = await fetchProfile(session.user.id, session.user.email || "");
-          if (mounted) setUser(profile);
+      try {
+        if (session?.user) {
+          if (mounted) setSupabaseUser(session.user);
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            const profile = await fetchProfile(session.user.id, session.user.email || "");
+            if (mounted) setUser(profile);
+          }
+        } else {
+          if (mounted) {
+            setSupabaseUser(null);
+            setUser(null);
+          }
         }
-      } else {
-        if (mounted) {
-          setSupabaseUser(null);
-          setUser(null);
-        }
+      } catch (e) {
+        console.error("onAuthStateChange error:", e);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
-      if (mounted) setIsLoading(false);
     });
 
     return () => {
@@ -143,11 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.session?.user) {
         setSupabaseUser(data.session.user);
         const profile = await fetchProfile(data.session.user.id, data.session.user.email || "");
-        // Note: fetchProfile will throw its own PROFILE_ERROR if it fails now
-        setUser(profile);
+        if (profile) {
+          setUser(profile);
+        }
       }
     } catch (err) {
-      // Re-throw so the Login component can catch it and hide its own spinner
       throw err;
     } finally {
       setIsLoading(false);
