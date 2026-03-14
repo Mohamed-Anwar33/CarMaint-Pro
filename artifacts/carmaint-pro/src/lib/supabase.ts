@@ -7,7 +7,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    // Disable navigator.locks to prevent "Lock broken by another request with the 'steal' option" 
+    // error caused by Service Worker competing for the auth lock
+    lock: 'no-op' as any,
+    storageKey: 'carmaint-pro-auth',
+    flowType: 'pkce',
+  },
+});
 
 export type Database = {
   public: {
