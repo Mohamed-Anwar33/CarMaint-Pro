@@ -378,8 +378,9 @@ export default function Pricing() {
             <h3 className="text-xl font-bold text-foreground mb-6">جدول الميزات التفصيلي</h3>
 
             {/* Detailed Features Table */}
-            <div className="rounded-2xl border border-border overflow-hidden overflow-x-auto w-full">
-              <table className="w-full text-xs sm:text-sm min-w-[450px] sm:min-w-[600px] border-collapse bg-white">
+            <div className="rounded-2xl border border-border overflow-hidden w-full">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-xs sm:text-sm min-w-[450px] sm:min-w-[600px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 text-right border-b border-border border-l w-[40%] font-bold">الميزة</th>
@@ -563,6 +564,7 @@ export default function Pricing() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
 
             {/* Footer Note box */}
@@ -723,8 +725,9 @@ export default function Pricing() {
 
           {/* Comprehensive Comparison Table */}
           <div className="w-full overflow-x-auto glass-card p-4 sm:p-6 rounded-3xl sm:rounded-[2rem]">
-            <div className="rounded-2xl border border-border overflow-hidden overflow-x-auto w-full">
-              <table className="w-full text-xs sm:text-sm min-w-[700px] md:min-w-[800px] border-collapse bg-white">
+            <div className="rounded-2xl border border-border overflow-hidden w-full">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-xs sm:text-sm min-w-[700px] md:min-w-[800px] border-collapse bg-white">
                 <thead>
                   <tr>
                     <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[22%] font-bold text-right">الميزة</th>
@@ -829,6 +832,7 @@ export default function Pricing() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
             
             {/* Box Highlight Callouts */}
