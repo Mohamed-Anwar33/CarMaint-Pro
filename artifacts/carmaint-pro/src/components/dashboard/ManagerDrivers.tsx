@@ -34,8 +34,8 @@ export function ManagerDrivers() {
       // 1. Fetch pending invitations sent by this manager
       const { data: invites, error: invitesErr } = await supabase
         .from("invitations")
-        .select("id, invited_email, status, car_id, cars(name)")
-        .eq("invited_by", user.id)
+        .select("id, driver_email, status, car_id, cars(name)")
+        .eq("manager_id", user.id)
         .eq("status", "pending");
 
       if (invitesErr) throw invitesErr;
@@ -44,7 +44,7 @@ export function ManagerDrivers() {
         invites.forEach((inv: any) => {
           userDrivers.push({
             id: inv.id,
-            email: inv.invited_email,
+            email: inv.driver_email,
             name: "سائق مدعو",
             status: "pending",
             carId: inv.car_id,
@@ -56,7 +56,7 @@ export function ManagerDrivers() {
       // 2. Fetch registered drivers (users assigned to cars owned by this manager)
       const { data: cars, error: carsErr } = await supabase
         .from("cars")
-        .select("id, name, driver_id, driver_name, users!cars_driver_id_fkey(email)")
+        .select("id, name, driver_id, driver_name")
         .eq("owner_id", user.id)
         .not("driver_id", "is", null);
 
@@ -66,7 +66,7 @@ export function ManagerDrivers() {
         cars.forEach((car: any) => {
           userDrivers.push({
             id: car.driver_id,
-            email: car.users?.email || "",
+            email: "",
             name: car.driver_name || "سائق",
             status: "registered",
             carId: car.id,

@@ -62,10 +62,12 @@ export function useNotifications(): UseNotificationsReturn {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
+      const subKeys = sub.toJSON().keys;
       const { error } = await supabase.from("push_subscriptions").upsert({
         user_id: userId,
         endpoint: sub.endpoint,
-        keys: sub.toJSON().keys,
+        p256dh: subKeys?.p256dh || "",
+        auth: subKeys?.auth || "",
       }, { onConflict: "endpoint" });
 
       if (!error) { setStatus("subscribed"); return true; }

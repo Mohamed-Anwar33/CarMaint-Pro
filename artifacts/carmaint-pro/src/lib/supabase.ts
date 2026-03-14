@@ -84,10 +84,9 @@ export type Database = {
         Row: {
           id: string;
           car_id: string;
-          invited_email: string;
-          invited_by: string;
+          driver_email: string;
+          manager_id: string;
           status: "pending" | "accepted" | "declined";
-          token: string;
           created_at: string;
         };
       };

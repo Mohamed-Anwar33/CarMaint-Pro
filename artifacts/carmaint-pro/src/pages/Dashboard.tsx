@@ -69,10 +69,13 @@ function ManagerReports() {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const { data, error } = await supabase.from("reports").select("*, cars(name, driver_name)").order("created_at", { ascending: false });
+        const { data, error } = await supabase.from("driver_reports").select("*, cars(name, driver_name)").order("submitted_at", { ascending: false });
         if(error) throw error;
         setReports(data.map((r: any) => ({
           ...r,
+          mileage: r.current_mileage,
+          engine_oil_status: r.oil_level,
+          created_at: r.submitted_at,
           car: { name: r.cars?.name, driver_name: r.cars?.driver_name }
         })));
       } catch (err) {
@@ -211,10 +214,12 @@ export default function Dashboard() {
 
       const { data: { session } } = await supabase.auth.getSession();
       if(session?.user) {
+        const subKeys = subscription.toJSON().keys;
         await supabase.from("push_subscriptions").upsert({
           user_id: session.user.id,
           endpoint: subscription.endpoint,
-          keys: subscription.toJSON().keys
+          p256dh: subKeys?.p256dh || "",
+          auth: subKeys?.auth || "",
         }, { onConflict: "endpoint" });
       }
       
@@ -882,8 +887,8 @@ function InviteDriverButton({ carId, onInvited }: { carId: string; onInvited: (n
         // Driver does NOT exist. Create invitation.
         const { error: invErr } = await supabase.from("invitations").insert({
           car_id: carId,
-          invited_email: email,
-          invited_by: session.user.id
+          driver_email: email,
+          manager_id: session.user.id
         });
         
         if (invErr) {
@@ -965,14 +970,11 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
       const { data: { session } } = await supabase.auth.getSession();
       if(!session?.user) throw new Error("يجب تسجيل الدخول");
 
-      const { data: carData } = await supabase.from("cars").select("owner_id").eq("id", carId).single();
-
-      const { error: reportErr } = await supabase.from("reports").insert({
+      const { error: reportErr } = await supabase.from("driver_reports").insert({
         car_id: carId,
         driver_id: session.user.id,
-        owner_id: carData?.owner_id, // we might need to fetch this or maybe we don't strictly require it but let's just push it if available
-        mileage: parseInt(mileage),
-        engine_oil_status: oil === "very_low" ? "low" : oil,
+        current_mileage: parseInt(mileage),
+        oil_level: oil === "very_low" ? "low" : oil,
         tires_status: toggles.tires,
         brakes_status: toggles.brakes,
         ac_status: toggles.ac,
