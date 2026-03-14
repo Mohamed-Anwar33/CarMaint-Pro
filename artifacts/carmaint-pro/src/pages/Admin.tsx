@@ -310,7 +310,6 @@ export default function Admin() {
                         </td>
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className="text-xs font-bold text-white bg-white/5 border border-border px-2 py-1 rounded-md">
-                            // @ts-ignore
                             {profile.carsCount || 0}
                           </span>
                         </td>

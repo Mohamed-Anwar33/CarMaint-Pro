@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
@@ -15,14 +15,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const { user, isLoading } = useAuth();
   
-  // Force clear stuck service workers on Login
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(r => r.unregister());
-      });
-    }
-  }, []);
+
 
   // Redirect if already logged in
   if (!isLoading && user) {

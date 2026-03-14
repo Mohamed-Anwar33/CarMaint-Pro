@@ -12,7 +12,6 @@ export default function Settings() {
   const { toast } = useToast();
   
   const [name, setName] = useState(user?.name || "");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -44,7 +43,6 @@ export default function Settings() {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       toast({ title: "تم التحديث", description: "تم تغيير كلمة المرور بنجاح." });
-      setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message || "حدث خطأ أثناء تغيير كلمة المرور.", variant: "destructive" });

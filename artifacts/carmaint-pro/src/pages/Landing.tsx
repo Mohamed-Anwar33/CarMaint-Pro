@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ShieldCheck, BellRing, Users, UserCog, FileText, Activity, ChevronLeft, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 // Mock announcements if API fails
 const MOCK_ANNOUNCEMENTS = [
@@ -13,11 +14,12 @@ export default function Landing() {
   const [announcements, setAnnouncements] = useState(MOCK_ANNOUNCEMENTS);
 
   useEffect(() => {
-    const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
-    fetch(`${BASE}/api/announcements`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data && data.length > 0) setAnnouncements(data); })
-      .catch(() => {});
+    (async () => {
+      try {
+        const { data } = await supabase.from("announcements").select("*").eq("active", true).order("created_at", { ascending: false });
+        if (data && data.length > 0) setAnnouncements(data);
+      } catch { /* silently use mock data */ }
+    })();
   }, []);
 
   const activeAnnouncements = announcements.filter((a: any) => a.active !== false);

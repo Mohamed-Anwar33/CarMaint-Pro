@@ -952,6 +952,7 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1018,10 +1019,10 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
                 </h2>
                 {error && <p className="text-destructive text-sm mb-4 p-3 bg-destructive/10 rounded-xl border border-destructive/30">{error}</p>}
                 <div className="mb-6 flex flex-col gap-3">
-                  <button type="button" className="w-full py-4 rounded-xl bg-destructive/5 border border-destructive/20 text-destructive font-bold flex items-center justify-center gap-2 hover:bg-destructive/10 transition-colors">
+                  <button type="button" onClick={() => toast({ title: "قريباً", description: "خاصية الإبلاغ عن الحوادث ستكون متاحة قريباً." })} className="w-full py-4 rounded-xl bg-destructive/5 border border-destructive/20 text-destructive font-bold flex items-center justify-center gap-2 hover:bg-destructive/10 transition-colors">
                     <span className="text-lg">🚨</span> إبلاغ عن حادث
                   </button>
-                  <button type="button" className="w-full py-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-amber-500 font-bold flex items-center justify-center gap-2 hover:bg-amber-500/10 transition-colors">
+                  <button type="button" onClick={() => toast({ title: "قريباً", description: "خاصية الإبلاغ عن الأعطال ستكون متاحة قريباً." })} className="w-full py-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-amber-500 font-bold flex items-center justify-center gap-2 hover:bg-amber-500/10 transition-colors">
                     <span className="w-3 h-3 rounded-full bg-destructive animate-pulse" /> إبلاغ عن بنشر / عطل
                   </button>
                 </div>

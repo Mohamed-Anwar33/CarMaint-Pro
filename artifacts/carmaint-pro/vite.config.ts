@@ -7,7 +7,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 const rawPort = process.env.PORT ?? "5173";
 const port = Number(rawPort);
-const basePath = process.env.BASE_PATH ?? "./";
+const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
