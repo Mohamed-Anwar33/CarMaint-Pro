@@ -12,13 +12,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    // Disable navigator.locks to prevent "Lock broken by another request with the 'steal' option" 
-    // error caused by Service Worker competing for the auth lock
-    lock: 'no-op' as any,
     storageKey: 'carmaint-pro-auth',
     flowType: 'pkce',
+    // No-op lock: bypasses navigator.locks to prevent "Lock broken by 
+    // another request with the 'steal' option" caused by Service Worker
+    lock: async (name: string, acquireTimeout: number, fn: () => Promise<any>) => {
+      return await fn();
+    },
   },
-});
+} as any);
 
 export type Database = {
   public: {
