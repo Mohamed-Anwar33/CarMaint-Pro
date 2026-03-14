@@ -81,7 +81,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       createdAt: newUser.created_at,
     };
   } catch (err) {
-    console.error("fetchProfile error:", err);
+    console.error("fetchProfile error (check Netlify environment variables or clear cache):", err);
     return null;
   }
 }
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSupabaseUser(data.session.user);
         const profile = await fetchProfile(data.session.user.id, data.session.user.email || "");
         if (!profile) {
-          throw new Error("Failed to load user profile");
+          throw new Error("DATA_FETCH_ERROR");
         }
         setUser(profile);
       }

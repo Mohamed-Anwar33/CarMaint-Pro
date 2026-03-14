@@ -74,7 +74,7 @@ export function PWAInstallPrompt() {
             
             <button
               onClick={handleDismiss}
-              className="absolute top-3 left-3 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-10"
+              className="absolute top-3 left-3 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-50 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>

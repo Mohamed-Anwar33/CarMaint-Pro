@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
@@ -14,6 +14,15 @@ export default function Login() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user, isLoading } = useAuth();
+  
+  // Force clear stuck service workers on Login
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(r => r.unregister());
+      });
+    }
+  }, []);
 
   // Redirect if already logged in
   if (!isLoading && user) {
@@ -34,8 +43,10 @@ export default function Login() {
         setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else if (msg.includes("Email not confirmed")) {
         setError("يرجى تأكيد بريدك الإلكتروني أولاً");
+      } else if (msg.includes("DATA_FETCH_ERROR")) {
+        setError("خطأ في الاتصال بقاعدة البيانات. تأكد من متغيّرات بيئة Netlify واعمل تحديث للصفحة.");
       } else {
-        setError("حدث خطأ. تأكد من بريدك وكلمة المرور.");
+        setError("حدث خطأ. تأكد من جودة الاتصال أو تحديث الصفحة.");
       }
     } finally {
       setSubmitting(false);

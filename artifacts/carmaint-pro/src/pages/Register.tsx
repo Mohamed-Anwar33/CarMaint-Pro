@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
@@ -18,6 +18,15 @@ export default function Register() {
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user, isLoading } = useAuth();
+
+  // Force clear stuck service workers on Register
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(r => r.unregister());
+      });
+    }
+  }, []);
 
   // Redirect if already logged in
   if (!isLoading && user) {
@@ -39,6 +48,8 @@ export default function Register() {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("already registered") || msg.includes("already been registered")) {
         setError("هذا البريد مسجل بالفعل. حاول تسجيل الدخول.");
+      } else if (msg.includes("Unexpected token") || msg.includes("SyntaxError") || msg.includes("fetch")) {
+        setError("خطأ في الاتصال بقاعدة البيانات. تأكد من متغيّرات بيئة Netlify واعمل تحديث للصفحة.");
       } else {
         setError(msg || "حدث خطأ أثناء إنشاء الحساب.");
       }
