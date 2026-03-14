@@ -39,6 +39,7 @@ export function Navbar() {
             </Link>
           )}
           <Link href="/offers" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/offers' ? "text-white" : "text-slate-300")}>العروض</Link>
+          <Link href="/pricing" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/pricing' ? "text-white" : "text-slate-300")}>الأسعار</Link>
           <Link href="/tips" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/tips' ? "text-white" : "text-slate-300")}>نصائح</Link>
         </nav>
 
@@ -161,6 +162,9 @@ export function Navbar() {
                   )}
                   <Link href="/offers" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
                     <Crown className="w-5 h-5 text-amber-400" /> العروض
+                  </Link>
+                  <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                    <Crown className="w-5 h-5 text-primary" /> الأسعار
                   </Link>
                   <Link href="/tips" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
                     <Shield className="w-5 h-5 text-secondary" /> نصائح

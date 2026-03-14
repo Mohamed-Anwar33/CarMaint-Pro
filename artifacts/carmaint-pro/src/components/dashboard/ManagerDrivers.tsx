@@ -4,6 +4,7 @@ import { Users, Mail, Car, Clock, CheckCircle, Trash2, UserMinus } from "lucide-
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 type DriverData = {
   id: string;
@@ -19,6 +20,7 @@ export function ManagerDrivers() {
   const [drivers, setDrivers] = useState<DriverData[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'revoke' | 'remove', id: string, carId?: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,8 +86,7 @@ export function ManagerDrivers() {
     }
   };
 
-  const handleRevoke = async (inviteId: string) => {
-    if (!confirm("هل أنت متأكد من إلغاء هذه الدعوة؟")) return;
+  const executeRevoke = async (inviteId: string) => {
     setActionLoading(inviteId);
     try {
       const { error } = await supabase.from("invitations").delete().eq("id", inviteId);
@@ -97,11 +98,11 @@ export function ManagerDrivers() {
       toast({ title: "خطأ", description: "فشل إلغاء الدعوة", variant: "destructive" });
     } finally {
       setActionLoading(null);
+      setConfirmAction(null);
     }
   };
 
-  const handleRemove = async (carId: string, driverId: string) => {
-    if (!confirm("هل أنت متأكد من إزالة هذا العضو من السيارة؟")) return;
+  const executeRemove = async (carId: string, driverId: string) => {
     setActionLoading(`${carId}-${driverId}`);
     try {
       const { error } = await supabase
@@ -117,6 +118,7 @@ export function ManagerDrivers() {
       toast({ title: "خطأ", description: "فشل إزالة السائق", variant: "destructive" });
     } finally {
       setActionLoading(null);
+      setConfirmAction(null);
     }
   };
 
@@ -173,7 +175,7 @@ export function ManagerDrivers() {
                   </div>
                   
                   <button 
-                    onClick={() => handleRevoke(driver.id)}
+                    onClick={() => setConfirmAction({ type: 'revoke', id: driver.id })}
                     disabled={actionLoading === driver.id}
                     className="mt-4 w-full flex items-center justify-center gap-2 px-3 py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl text-xs font-bold hover:bg-destructive/20 transition-colors disabled:opacity-50"
                   >
@@ -214,7 +216,7 @@ export function ManagerDrivers() {
                   </div>
 
                   <button 
-                    onClick={() => handleRemove(driver.carId, driver.id)}
+                    onClick={() => setConfirmAction({ type: 'remove', id: driver.id, carId: driver.carId })}
                     disabled={actionLoading === `${driver.carId}-${driver.id}`}
                     className="mt-4 w-full flex items-center justify-center gap-2 px-3 py-2 bg-card border border-border text-muted-foreground rounded-xl text-xs font-bold hover:text-destructive hover:border-destructive/50 transition-colors disabled:opacity-50"
                   >
@@ -227,6 +229,28 @@ export function ManagerDrivers() {
           </div>
         </section>
       )}
+
+      <ConfirmModal
+        isOpen={confirmAction?.type === 'revoke'}
+        onClose={() => setConfirmAction(null)}
+        title="إلغاء دعوة الانضمام"
+        message="هل أنت متأكد من رغبتك في إلغاء هذه الدعوة؟ لن يتمكن الشخص من استخدام هذا الرابط بعد الآن للتسجيل ضمن عائلتك."
+        confirmText="نعم، ألغِ الدعوة"
+        cancelText="تراجع"
+        variant="warning"
+        onConfirm={() => confirmAction?.type === 'revoke' && executeRevoke(confirmAction.id)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmAction?.type === 'remove'}
+        onClose={() => setConfirmAction(null)}
+        title="إزالة هذا العضو من السيارة؟"
+        message="هل أنت متأكد من إبطال صلاحية هذا العضو من هذه السيارة العائلية؟ لن يتمكن من رؤيتها في حسابه بعد الآن."
+        confirmText="نعم، قم بالإزالة"
+        cancelText="تراجع"
+        variant="danger"
+        onConfirm={() => confirmAction?.type === 'remove' && confirmAction.carId && executeRemove(confirmAction.carId, confirmAction.id)}
+      />
     </div>
   );
 }

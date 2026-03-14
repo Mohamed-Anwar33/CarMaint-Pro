@@ -61,11 +61,11 @@ export function PWAInstallPrompt() {
     <AnimatePresence>
       {showBanner && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
+          exit={{ y: -100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-4 left-4 right-4 z-[100] max-w-sm mx-auto"
+          className="fixed top-4 left-4 right-4 z-[9999] max-w-sm mx-auto"
           dir="rtl"
         >
           <div className="bg-card border border-border border border-sky-400/30 rounded-2xl p-4 shadow-2xl shadow-black/50 relative overflow-hidden">
@@ -108,9 +108,9 @@ export function PWAInstallPrompt() {
                 {isIOS && (
                   <div className="flex items-center gap-2 text-xs text-sky-400">
                     <div className="w-4 h-4 rounded bg-sky-400/20 flex items-center justify-center">
-                      <span className="text-[10px]">↑</span>
+                      <span className="text-[10px]">↓</span>
                     </div>
-                    <span>اضغط زر المشاركة أدناه</span>
+                    <span>اضغط زر المشاركة في شريط المتصفح بالأسفل</span>
                   </div>
                 )}
               </div>

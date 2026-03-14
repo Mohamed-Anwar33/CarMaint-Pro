@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bell, BellOff, BellRing, X, CheckCircle, Smartphone } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 import { InAppNotification, inAppNotifications, subscribeToNotifications, markAllRead } from "@/lib/notification-store";
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const { status, isSupported, requestPermission, subscribe, sendTestNotification } = useNotifications();
+  const { toast } = useToast();
+  const { status, isSupported, requestPermission, subscribe, unsubscribe, sendTestNotification } = useNotifications();
   const [open, setOpen] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
@@ -32,13 +34,29 @@ export function NotificationBell() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleEnable = async () => {
+  const handleToggle = async () => {
     setRequesting(true);
-    const granted = await requestPermission();
-    if (granted && user) {
-      await subscribe(user.id);
-      sendTestNotification();
-      setShowSetup(false);
+    if (status === "subscribed") {
+      try {
+        await unsubscribe();
+        toast({ title: "تم الإيقاف", description: "تم إيقاف تنبيهات الصيانة بنجاح." });
+      } catch (err) {
+        toast({ title: "خطأ", description: "حدث خطأ أثناء إيقاف التنبيهات.", variant: "destructive" });
+      }
+    } else {
+      const granted = await requestPermission();
+      if (granted && user) {
+        const { success, error } = await subscribe(user.id);
+        if (success) {
+          sendTestNotification();
+          setShowSetup(false);
+          toast({ title: "تم التفعيل", description: "تم تفعيل التنبيهات بنجاح!" });
+        } else {
+          toast({ title: "خطأ", description: error || "لم نتمكن من تفعيل التنبيهات، حاول مرة أخرى.", variant: "destructive" });
+        }
+      } else {
+        toast({ title: "تم الرفض", description: "يجب الموافقة على صلاحية التنبيهات من المتصفح أولاً.", variant: "destructive" });
+      }
     }
     setRequesting(false);
   };
@@ -80,7 +98,7 @@ export function NotificationBell() {
                 <div className="flex-1">
                   <p className="font-bold text-foreground text-sm mb-0.5">فعّل تنبيهات الصيانة 🔔</p>
                   <p className="text-xs text-muted-foreground mb-3">سنذكّرك بمواعيد زيت سيارتك وتجديد وثائقها تلقائياً — لا تفوّت موعداً</p>
-                  <button onClick={handleEnable} disabled={requesting}
+                  <button onClick={handleToggle} disabled={requesting}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-md shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-60">
                     {requesting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Bell className="w-4 h-4" /> تفعيل التنبيهات</>}
                   </button>
@@ -127,15 +145,15 @@ export function NotificationBell() {
                     {unreadCount > 0 && (
                       <button onClick={markAllRead} className="text-[10px] text-primary hover:underline">تحديد كمقروء</button>
                     )}
-                    {status !== "subscribed" && isSupported && (
-                      <button onClick={handleEnable} className="text-[10px] px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors">
-                        {requesting ? "..." : "فعّل التنبيهات"}
+                    {isSupported && (
+                      <button onClick={handleToggle} disabled={requesting} className={cn(
+                        "text-[10px] px-2 py-1 rounded-lg border flex items-center gap-1 transition-colors",
+                        status === "subscribed" 
+                          ? "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20"
+                          : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                      )}>
+                        {requesting ? "..." : (status === "subscribed" ? <><BellOff className="w-3 h-3" /> إيقاف</> : <><Bell className="w-3 h-3" /> تفعيل</>)}
                       </button>
-                    )}
-                    {status === "subscribed" && (
-                      <span className="flex items-center gap-1 text-[10px] text-emerald-400">
-                        <CheckCircle className="w-3 h-3" /> مفعّلة
-                      </span>
                     )}
                   </div>
                 </div>

@@ -86,9 +86,7 @@ export default function Checkout() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <CarMaintLogo size="md" animated />
-          </Link>
+
           <h1 className="text-2xl sm:text-3xl font-black text-foreground mb-2">إتمام الاشتراك</h1>
           <p className="text-muted-foreground">أنت على بعد خطوة واحدة من تفعيل خطتك</p>
         </div>

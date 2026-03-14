@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ManagerDrivers } from "@/components/dashboard/ManagerDrivers";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface CarData {
   id: string; ownerId: string; driverId: string | null; name: string;
@@ -245,6 +246,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [showOverduePush, setShowOverduePush] = useState(true);
+  const [driverToRemove, setDriverToRemove] = useState<CarData | null>(null);
   
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true); // Default true so it doesn't flash
@@ -342,6 +344,41 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-10 bg-card/20 p-6 rounded-3xl border border-border/30 backdrop-blur-sm">
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-black text-foreground flex items-center gap-2 tracking-tight">
+            {activeTab === "manager" ? `مرحباً، ${user.name || "مدير"} 👋` : activeTab === "reports" ? "التقارير المرفوعة 📋" : activeTab === "drivers" ? "إدارة العائلة 👥" : "السيارات المخصصة لك"}
+          </h1>
+          <p className="text-sm text-muted-foreground font-medium">
+            {activeTab === "manager" ? "تابع حالة مركباتك، وثائقها، وتقاريرها من مكان واحد." : activeTab === "reports" ? "استعرض تقارير الفحص الدورية المقدمة من مستخدمي المركبات" : activeTab === "drivers" ? "شاهد أفراد العائلة النشطين وأرسل دعوات لمشاركة المركبات" : "سجل تقارير الفحص الدورية لمركبات العائلة بنقرة واحدة"}
+          </p>
+        </div>
+        {activeTab === "manager" && (
+          <div className="flex items-center gap-3">
+            {user.plan === "free" && (
+              <Link href="/pricing" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold hover:bg-amber-500/20 transition-colors">
+                <Crown className="w-3.5 h-3.5" /> ترقية للبرو
+              </Link>
+            )}
+            {cars.length >= (user.plan === "family_large" ? 5 : user.plan === "family_small" ? 3 : user.plan === "pro" ? 1 : 1) ? (
+              <div className="group relative">
+                <button disabled className="flex items-center gap-2 px-4 py-2 bg-card/50 border border-border/50 text-muted-foreground rounded-xl text-sm font-medium transition-all cursor-not-allowed">
+                  <Plus className="w-4 h-4" /> إضافة سيارة
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-48 p-2 bg-popover border border-border rounded-lg text-xs text-popover-foreground shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  {user.plan === "family_large" ? "لقد وصلت للحد الأقصى المسموح (5 سيارات)" : user.plan === "family_small" ? "لقد وصلت للحد الأقصى المسموح (3 سيارات)" : user.plan === "pro" ? "خطة البرو تتيح سيارة واحدة فقط." : "الخطة المجانية تتيح سيارة واحدة فقط."} <Link href="/pricing" className="text-primary hover:underline">رقي حسابك</Link>
+                </div>
+              </div>
+            ) : (
+              <Link href="/onboarding" className="flex items-center gap-2 px-4 py-2 bg-card border border-border hover:border-primary/50 text-foreground rounded-xl text-sm font-medium transition-all hover:shadow-lg">
+                <Plus className="w-4 h-4" /> إضافة سيارة
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Push Notification for Overdue Reports */}
       <AnimatePresence>
         {hasOverduePush && (
@@ -404,6 +441,8 @@ export default function Dashboard() {
         </motion.div>
       )}
 
+
+
       {/* Premium Tab Header for managers */}
       {["manager", "both"].includes(user.role) && (
         <div className="flex justify-center mb-10 w-full">
@@ -431,41 +470,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5 mb-10 bg-card/20 p-6 rounded-3xl border border-border/30 backdrop-blur-sm">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-black text-foreground flex items-center gap-2 tracking-tight">
-            {activeTab === "manager" ? `مرحباً، ${user.name || "مدير"} 👋` : activeTab === "reports" ? "التقارير المرفوعة 📋" : activeTab === "drivers" ? "إدارة العائلة 👥" : "السيارات المخصصة لك"}
-          </h1>
-          <p className="text-sm text-muted-foreground font-medium">
-            {activeTab === "manager" ? "تابع حالة مركباتك، وثائقها، وتقاريرها من مكان واحد." : activeTab === "reports" ? "استعرض تقارير الفحص الدورية المقدمة من مستخدمي المركبات" : activeTab === "drivers" ? "شاهد أفراد العائلة النشطين وأرسل دعوات لمشاركة المركبات" : "سجل تقارير الفحص الدورية لمركبات العائلة بنقرة واحدة"}
-          </p>
-        </div>
-        {activeTab === "manager" && (
-          <div className="flex items-center gap-3">
-            {user.plan === "free" && (
-              <Link href="/pricing" className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold hover:bg-amber-500/20 transition-colors">
-                <Crown className="w-3.5 h-3.5" /> ترقية للبرو
-              </Link>
-            )}
-            {cars.length >= (user.plan === "family_large" ? 5 : user.plan === "family_small" ? 3 : user.plan === "pro" ? 1 : 1) ? (
-              <div className="group relative">
-                <button disabled className="flex items-center gap-2 px-4 py-2 bg-card/50 border border-border/50 text-muted-foreground rounded-xl text-sm font-medium transition-all cursor-not-allowed">
-                  <Plus className="w-4 h-4" /> إضافة سيارة
-                </button>
-                <div className="absolute right-0 top-full mt-2 w-48 p-2 bg-popover border border-border rounded-lg text-xs text-popover-foreground shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                  {user.plan === "family_large" ? "لقد وصلت للحد الأقصى المسموح (5 سيارات)" : user.plan === "family_small" ? "لقد وصلت للحد الأقصى المسموح (3 سيارات)" : user.plan === "pro" ? "خطة البرو تتيح سيارة واحدة فقط." : "الخطة المجانية تتيح سيارة واحدة فقط."} <Link href="/pricing" className="text-primary hover:underline">رقي حسابك</Link>
-                </div>
-              </div>
-            ) : (
-              <Link href="/onboarding" className="flex items-center gap-2 px-4 py-2 bg-card border border-border hover:border-primary/50 text-foreground rounded-xl text-sm font-medium transition-all hover:shadow-lg">
-                <Plus className="w-4 h-4" /> إضافة سيارة
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -530,14 +534,23 @@ export default function Dashboard() {
                           </div>
                           
                             {car.driverName ? (
-                              <div className="flex items-center gap-3 bg-muted/60 p-3 rounded-2xl border border-border group-hover:bg-muted transition-colors">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 flex items-center justify-center text-secondary font-black shadow-inner border border-secondary/20">
-                                  {car.driverName.charAt(0)}
+                              <div className="flex items-center justify-between gap-3 bg-muted/60 p-3 rounded-2xl border border-border group-hover:bg-muted transition-colors w-full">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 flex items-center justify-center text-secondary font-black shadow-inner border border-secondary/20 shrink-0">
+                                    {car.driverName.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <span className="text-sm font-bold text-foreground truncate block leading-tight mb-0.5" title={car.driverName}>{car.driverName}</span>
+                                    <span className="text-[11px] font-medium text-muted-foreground block leading-none">صلاحية كاملة</span>
+                                  </div>
                                 </div>
-                                <div className="flex-1 overflow-hidden">
-                                  <span className="text-sm font-bold text-foreground block truncate">{car.driverName}</span>
-                                  <span className="text-[10px] text-muted-foreground">صلاحية كاملة</span>
-                                </div>
+                                <button
+                                  onClick={() => setDriverToRemove(car)}
+                                  className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive hover:text-white flex items-center justify-center transition-colors shrink-0"
+                                  title="إزالة العضو"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             ) : (
                               <InviteDriverButton carId={car.id} carName={car.name} userPlan={user.plan} onInvited={(driverName) => setCars(prev => prev.map(c => c.id === car.id ? { ...c, driverName } : c))} />
@@ -612,6 +625,27 @@ export default function Dashboard() {
           )}
         </>
       )}
+
+      <ConfirmModal
+        isOpen={!!driverToRemove}
+        onClose={() => setDriverToRemove(null)}
+        title="إزالة هذا العضو من السيارة؟"
+        message={`هل أنت متأكد من إبطال صلاحية السائق ${driverToRemove?.driverName || 'المتوفر'} من سيارة ${driverToRemove?.name || 'هذه'}؟ سيتم منعه من رفع التقارير لهذه السيارة.`}
+        confirmText="نعم، حذف العضو"
+        cancelText="تراجع"
+        variant="danger"
+        onConfirm={async () => {
+          if (!driverToRemove) return;
+          const { error } = await supabase.from('cars').update({ driver_name: null }).eq('id', driverToRemove.id);
+          if (!error) {
+            setCars(prev => prev.map(c => c.id === driverToRemove.id ? { ...c, driverName: null } : c));
+            toast({ title: "تم الإزالة", description: "تمت إزالة العضو بنجاح" });
+          } else {
+            toast({ title: "خطأ", description: "تعذر إزالة العضو المضاف", variant: "destructive" });
+          }
+          setDriverToRemove(null);
+        }}
+      />
     </div>
   );
 }
@@ -1000,14 +1034,13 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="bg-card border border-destructive/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center">
             <div className="w-16 h-16 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-8 h-8" />
+               <Trash2 className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">حذف السيارة</h3>
             <p className="text-muted-foreground text-sm mb-6">هل أنت متأكد من حذف <span className="text-foreground font-medium">{car.name}</span>؟ لا يمكن التراجع عن هذا الإجراء.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-xl border border-border text-foreground hover:bg-black/5 transition-colors">إلغاء</button>
               <button onClick={handleDelete} disabled={deleting} className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {deleting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Trash2 className="w-4 h-4" /> حذف</>}
               </button>
             </div>
           </motion.div>

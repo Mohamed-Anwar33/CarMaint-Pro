@@ -236,11 +236,97 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* Simplified Plan Cards */}
+      <section className="pb-16 px-4 -mt-8 relative z-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Free Plan */}
+            <div className="bg-card border border-border rounded-3xl p-8 shadow-sm flex flex-col items-center text-center relative overflow-hidden transition-all hover:shadow-md">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-6 text-2xl">🆓</div>
+              <h3 className="text-2xl font-black text-foreground mb-2">الباقة المجانية</h3>
+              <p className="text-muted-foreground text-sm mb-6">متابعة أساسية لسيارة واحدة</p>
+              <div className="mb-8">
+                <span className="text-5xl font-black text-foreground">0</span>
+                <span className="text-muted-foreground font-medium"> ريال</span>
+              </div>
+              <ul className="text-sm font-medium text-muted-foreground space-y-4 mb-8 text-right w-full flex-1">
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-foreground">سيارة واحدة</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-foreground">إشعارات داخل التطبيق</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-foreground">حساب مواعيد الصيانة</span></li>
+                <li className="flex items-center gap-3 opacity-50"><X className="w-5 h-5 text-destructive shrink-0" /> بدون تنبيهات SMS أو بريد</li>
+                <li className="flex items-center gap-3 opacity-50"><X className="w-5 h-5 text-destructive shrink-0" /> بدون حفظ فواتير</li>
+              </ul>
+              <Link href="/register" className="w-full py-4 rounded-xl bg-muted text-foreground font-bold hover:bg-muted/80 transition-colors">
+                ابدأ مجاناً
+              </Link>
+            </div>
+
+            {/* Individual Pro Plan */}
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-3xl p-8 shadow-xl shadow-primary/5 flex flex-col items-center text-center relative overflow-hidden md:-translate-y-4">
+              <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary to-orange-400" />
+              <div className="absolute top-5 left-5 bg-primary/20 text-primary text-xs font-black px-3 py-1 rounded-full">الأكثر طلباً</div>
+              
+              <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-6 text-2xl shadow-inner border border-primary/20">💎</div>
+              <h3 className="text-2xl font-black text-primary mb-2">باقة الفرد (برو)</h3>
+              <p className="text-primary/70 text-sm mb-6 font-medium">ميزات متقدمة وتنبيهات شاملة</p>
+              <div className="mb-8">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-5xl font-black text-foreground">{billing === "yearly" ? "99" : "9"}</span>
+                  <span className="text-muted-foreground font-medium">ريال / {billing === "yearly" ? "سنة" : "شهر"}</span>
+                </div>
+                {billing === "yearly" && <p className="text-xs text-primary font-bold mt-2 bg-primary/10 py-1 px-3 rounded-full inline-block">توفير 17% عن الدفع الشهري</p>}
+              </div>
+              <ul className="text-sm font-medium space-y-4 mb-8 text-right w-full flex-1">
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-foreground font-bold">كل ميزات الباقة المجانية</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-primary shrink-0" /> <span className="text-foreground">تنبيهات SMS وبريد إلكتروني</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-primary shrink-0" /> <span className="text-foreground">رفع وحفظ فواتير الإصلاح</span></li>
+                {billing === "yearly" && (
+                  <li className="flex items-center gap-3 bg-white/50 p-2 rounded-lg border border-primary/10"><Check className="w-5 h-5 text-primary shrink-0" /> <span className="text-primary font-bold">5 ملصقات مفرغة تشحن إليك 🏷️</span></li>
+                )}
+              </ul>
+              <Link href={`/checkout?plan=pro_${billing}&billing=${billing}`} className="w-full py-4 rounded-xl bg-primary text-white font-black shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 transition-all">
+                اشترك الآن
+              </Link>
+            </div>
+
+            {/* Family Plan */}
+            <div className="bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 rounded-3xl p-8 shadow-sm flex flex-col items-center text-center relative overflow-hidden transition-all hover:shadow-md">
+              <div className="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center mb-6 text-2xl shadow-inner border border-secondary/20">👨‍👩‍👧‍👦</div>
+              <h3 className="text-2xl font-black text-secondary mb-2">باقة العائلة</h3>
+              <p className="text-secondary/70 text-sm mb-6 font-medium">التحكم بسيارات العائلة بحسابات مستقلة</p>
+              <div className="mb-8">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-5xl font-black text-foreground">{billing === "yearly" ? "199" : "19"}</span>
+                  <span className="text-muted-foreground font-medium">ريال / {billing === "yearly" ? "سنة" : "شهر"}</span>
+                </div>
+                {billing === "yearly" && <p className="text-xs text-secondary font-bold mt-2 bg-secondary/10 py-1 px-3 rounded-full inline-block">عائلة صغيرة (3 سيارات)</p>}
+              </div>
+              <ul className="text-sm font-medium space-y-4 mb-8 text-right w-full flex-1">
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-emerald-500 shrink-0" /> <span className="text-foreground font-bold">3 إلى 5 سيارات</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-secondary shrink-0" /> <span className="text-foreground">حساب ولي الأمر وحساب للسائق</span></li>
+                <li className="flex items-center gap-3"><Check className="w-5 h-5 text-secondary shrink-0" /> <span className="text-foreground">إلزام السائق بنموذج الفحص</span></li>
+                {billing === "yearly" && (
+                  <li className="flex items-center gap-3 bg-white/50 p-2 rounded-lg border border-secondary/10"><Check className="w-5 h-5 text-secondary shrink-0" /> <span className="text-secondary font-bold">حتى 15 ملصق تشحن إليك 🏷️</span></li>
+                )}
+              </ul>
+              <Link href={`/checkout?plan=family_small_${billing}&billing=${billing}`} className="w-full py-4 rounded-xl bg-secondary text-white font-black hover:bg-secondary/90 shadow-lg shadow-secondary/20 hover:-translate-y-1 transition-all">
+                اشترك الآن
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════════════════════════════════════════════ */}
       {/*  أولاً: خطط الفرد                                      */}
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="pb-16 px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto border-t border-border pt-16">
+          <div className="mb-8 text-center text-muted-foreground flex items-center justify-center gap-2 font-bold mb-12">
+            <ChevronDown className="w-5 h-5" />
+            الجداول التفصيلية للمقارنة
+            <ChevronDown className="w-5 h-5" />
+          </div>
           <div className="mb-8">
             <h2 className="text-2xl font-black text-foreground mb-2 flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">1</span>
@@ -770,8 +856,6 @@ export default function Pricing() {
       {/* Footer CTA */}
       <section className="pb-16 px-4 text-center border-t border-border/50 pt-16 mt-8 relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-        <p className="text-foreground font-bold text-lg mb-2">مداري — Mdari</p>
-        <p className="text-muted-foreground text-sm">www.mdari.sa · {new Date().getFullYear()}</p>
         <div className="flex justify-center gap-4 mt-8">
           <Link href="/register" className="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 transition-all">
             <ArrowLeft className="w-5 h-5" /> ابدأ مجاناً الآن

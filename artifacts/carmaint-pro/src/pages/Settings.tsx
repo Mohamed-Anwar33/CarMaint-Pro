@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { User, Shield, Key, Save, AlertTriangle, Crown, Receipt } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 const PLAN_LABELS: Record<string, string> = { free: "مجاني", pro: "برو", family_small: "عائلة صغيرة", family_large: "عائلة كبيرة" };
 const ROLE_LABELS: Record<string, string> = { manager: "مدير سيارات", driver: "سائق", both: "مدير وسائق", admin: "مسؤول النظام" };
@@ -16,6 +17,7 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   if (!user) return null;
 
@@ -179,11 +181,7 @@ export default function Settings() {
 
             <div className="pt-2 flex justify-end">
               <button
-                onClick={() => {
-                  if (window.confirm("هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.")) {
-                    toast({ title: "رسالة نظام", description: "تم إرسال طلب حذف حسابك للإدارة. سيتم مسح بياناتك قريباً." });
-                  }
-                }}
+                onClick={() => setShowDeleteConfirm(true)}
                 className="px-6 py-2.5 rounded-xl font-bold bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive hover:text-white transition-all flex items-center gap-2">
                 حذف الحساب نهائياً
               </button>
@@ -192,6 +190,19 @@ export default function Settings() {
 
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="حذف الحساب نهائياً"
+        message="هل أنت متأكد من رغبتك في حذف حسابك نهائياً؟ سيتم مسح جميع بياناتك، السيارات، التقارير المرتبطة بها، ولن تتمكن من استعادتها."
+        confirmText="نعم، احذف حسابي"
+        cancelText="إلغاء الأمر"
+        variant="danger"
+        onConfirm={() => {
+          toast({ title: "رسالة نظام", description: "تم إرسال طلب حذف حسابك للإدارة. سيتم مسح بياناتك قريباً." });
+        }}
+      />
     </div>
   );
 }

@@ -62,9 +62,7 @@ export default function Register() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10 py-10">
         <div className="glass-card rounded-[2.5rem] p-8 sm:p-10">
           <div className="flex justify-center mb-8">
-            <div className="p-3 bg-white rounded-2xl shadow-sm border border-border">
-              <CarMaintLogo size="md" animated />
-            </div>
+            <CarMaintLogo size="lg" theme="light" animated />
           </div>
           
           <div className="text-center mb-10">
@@ -103,7 +101,7 @@ export default function Register() {
                   placeholder="••••••••" required minLength={6} dir="ltr" autoComplete="new-password"
                   className="w-full px-5 pr-5 pl-12 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center p-1">
+                  className="absolute left-0 top-0 bottom-0 px-4 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
