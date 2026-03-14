@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
@@ -13,14 +13,14 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  
+    // Redirect if already logged in
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation("/dashboard");
+    }
+  }, [isLoading, user, setLocation]);
 
-
-  // Redirect if already logged in
-  if (!isLoading && user) {
-    setLocation("/dashboard");
-    return null;
-  }
+  if (!isLoading && user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

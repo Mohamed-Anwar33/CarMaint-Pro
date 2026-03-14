@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
@@ -7,7 +7,7 @@ import { CarMaintLogo } from "@/components/CarMaintLogo";
 import type { UserRole } from "@/hooks/use-auth";
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,15 +17,15 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { user, isLoading } = useAuth();
-
-
 
   // Redirect if already logged in
-  if (!isLoading && user) {
-    setLocation("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && user) {
+      setLocation("/dashboard");
+    }
+  }, [isLoading, user, setLocation]);
+
+  if (!isLoading && user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
