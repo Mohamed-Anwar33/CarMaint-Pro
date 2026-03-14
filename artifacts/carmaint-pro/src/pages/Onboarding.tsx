@@ -55,7 +55,7 @@ export default function Onboarding() {
           
         if (error) throw error;
         
-        const limit = user!.plan === "family_large" ? Infinity : user!.plan === "family_small" ? 5 : 1;
+        const limit = user!.plan === "family_large" ? 5 : user!.plan === "family_small" ? 3 : 1;
         if ((count || 0) >= limit) setLimitReached(true);
       } catch (err) {
         console.error("Failed to check cars limit:", err);
@@ -144,18 +144,21 @@ export default function Onboarding() {
   };
 
   const steps = [
-    { num: 1, title: "مواصفات السيارة", icon: <Car className="w-5 h-5" /> },
-    { num: 2, title: "السوائل الأساسية", icon: <ShieldAlert className="w-5 h-5" /> },
-    { num: 3, title: "الوثائق الرسمية", icon: <CalendarClock className="w-5 h-5" /> },
-    { num: 4, title: "البطارية والإطارات", icon: <CheckCircle2 className="w-5 h-5" /> }
+    { num: 1, title: "المعلومات الأساسية", icon: <Car className="w-5 h-5" /> },
+    { num: 2, title: "الوثائق", icon: <ShieldAlert className="w-5 h-5" /> },
+    { num: 3, title: "القطع الاستهلاكية", icon: <CalendarClock className="w-5 h-5" /> },
+    { num: 4, title: "المراجعة", icon: <CheckCircle2 className="w-5 h-5" /> }
   ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="mb-12">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">
-          {limitReached ? "تجاوز الحد الأقصى" : "إضافة سيارتك الأساسية"}
+        <h1 className="text-3xl font-bold text-foreground text-center mb-2">
+          {limitReached ? "تجاوز الحد الأقصى" : `يا مرحبا ${user?.name?.split(' ')[0] || ''} 👋`}
         </h1>
+        {!limitReached && (
+          <p className="text-center text-muted-foreground mb-8">لنقم بإضافة سيارتك للمتابعة</p>
+        )}
         
         {checkingLimit ? (
           <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>
@@ -164,10 +167,10 @@ export default function Onboarding() {
             <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-6">
               <ShieldAlert className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">لقد وصلت للحد الأقصى</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-3">لقد وصلت للحد الأقصى</h2>
             <p className="text-muted-foreground mb-8">لا يمكنك إضافة المزيد من السيارات في خطتك الحالية. قم بترقية حسابك للتمتع بإضافة المزيد من السيارات وميزات إضافية.</p>
             <div className="flex gap-3">
-              <button onClick={() => setLocation("/dashboard")} className="flex-1 py-3 border border-border rounded-xl text-white hover:bg-white/5 transition-colors">العودة للرئيسية</button>
+              <button onClick={() => setLocation("/dashboard")} className="flex-1 py-3 border border-border rounded-xl text-foreground hover:bg-black/5 transition-colors">العودة للرئيسية</button>
               <button onClick={() => setLocation("/pricing")} className="flex-1 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">ترقية الحساب</button>
             </div>
           </div>
@@ -180,7 +183,7 @@ export default function Onboarding() {
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${step >= s.num ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-card border border-border text-muted-foreground'}`}>
                   {s.icon}
                 </div>
-                <span className={`text-xs font-medium hidden sm:block ${step >= s.num ? 'text-white' : 'text-muted-foreground'}`}>{s.title}</span>
+                <span className={`text-xs font-medium hidden sm:block ${step >= s.num ? 'text-foreground' : 'text-muted-foreground'}`}>{s.title}</span>
               </div>
             ))}
           </div>
@@ -196,36 +199,36 @@ export default function Onboarding() {
           <motion.div key={step} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-white mb-6">المعلومات الأساسية</h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">المعلومات الأساسية</h2>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">اسم/نوع السيارة <span className="text-destructive">*</span></label>
+                  <label className="text-sm font-medium text-foreground">اسم/نوع السيارة <span className="text-destructive">*</span></label>
                   <input type="text" placeholder="مثال: تويوتا كامري" value={formData.name}
                     onChange={e => update('name', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none transition-colors" />
+                    className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none transition-colors" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-4 pt-4 border-t border-border/50">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">رقم اللوحة (اختياري)</label>
+                      <label className="text-sm font-medium text-foreground">رقم اللوحة (اختياري)</label>
                       <input type="text" placeholder="مثال: أ ب ج 1234" value={formData.plateNumber}
                         onChange={e => update('plateNumber', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none transition-colors" />
+                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none transition-colors" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">ملاحظات</label>
+                      <label className="text-sm font-medium text-foreground">ملاحظات</label>
                       <input type="text" placeholder="مثال: تأمين شامل، فحص..." value={formData.notes}
                         onChange={e => update('notes', e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none transition-colors" />
+                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none transition-colors" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">سنة الصنع <span className="text-destructive">*</span></label>
+                    <label className="text-sm font-medium text-foreground">سنة الصنع <span className="text-destructive">*</span></label>
                     <input type="number" placeholder="2024" value={formData.modelYear || ''}
                       onChange={e => update('modelYear', parseInt(e.target.value) || null)}
-                      className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">نوع القير</label>
+                    <label className="text-sm font-medium text-foreground">نوع القير</label>
                     <div className="grid grid-cols-2 gap-2">
                       {(["automatic", "manual"] as TransmissionType[]).map(t => (
                         <button key={t} onClick={() => update('transmissionType', t)}
@@ -237,7 +240,7 @@ export default function Onboarding() {
                   </div>
                 </div>
                 <div className="space-y-2 pt-4">
-                  <label className="text-sm font-medium text-slate-300">نوع زيت المحرك (تكرار التغيير)</label>
+                  <label className="text-sm font-medium text-foreground">نوع زيت المحرك (تكرار التغيير)</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(["5000km", "10000km", "custom"] as EngineOilType[]).map(t => (
                       <button key={t} onClick={() => update('engineOilType', t)}
@@ -249,36 +252,36 @@ export default function Onboarding() {
                   {formData.engineOilType === "custom" && (
                     <div className="grid grid-cols-2 gap-4 mt-4 p-4 rounded-xl bg-background border border-border">
                       <div>
-                        <label className="text-xs text-slate-400 mb-1 block">فترة التغيير بالأيام</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">فترة التغيير بالأيام</label>
                         <input type="number" placeholder="مثال: 90" value={formData.engineOilCustomDays || ''}
                           onChange={e => update('engineOilCustomDays', parseInt(e.target.value) || null)}
-                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                       </div>
                       <div>
-                        <label className="text-xs text-slate-400 mb-1 block">فترة التغيير بالكيلومتر</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">فترة التغيير بالكيلومتر</label>
                         <input type="number" placeholder="مثال: 5000" value={formData.engineOilCustomKm || ''}
                           onChange={e => update('engineOilCustomKm', parseInt(e.target.value) || null)}
-                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                       </div>
                     </div>
                   )}
                 </div>
+
+                <div className="space-y-6 pt-6 border-t border-border/50">
+                  <h3 className="text-lg font-bold text-foreground mb-4">مواعيد السوائل (اختياري)</h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">تاريخ تعبئة ماء الرديتر (Coolant)</label>
+                    <input type="date" value={formData.coolantFillDate} onChange={e => update('coolantFillDate', e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                    <p className="text-xs text-muted-foreground">سيتم تذكيرك تلقائياً بعد 6 أشهر من هذا التاريخ لفحص المستوى.</p>
+                  </div>
+                </div>
+
               </div>
             )}
             {step === 2 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-white mb-6">مواعيد السوائل (اختياري)</h2>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">تاريخ تعبئة ماء الرديتر (Coolant)</label>
-                  <input type="date" value={formData.coolantFillDate} onChange={e => update('coolantFillDate', e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none [color-scheme:dark] transition-colors" />
-                  <p className="text-xs text-muted-foreground">سيتم تذكيرك تلقائياً بعد 6 أشهر من هذا التاريخ لفحص المستوى.</p>
-                </div>
-              </div>
-            )}
-            {step === 3 && (
-              <div className="space-y-6">
-                <h2 className="text-xl font-bold text-white mb-6">تواريخ الانتهاء للوثائق (اختياري)</h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">الوثائق والقطع الاستهلاكية</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {[
                     { key: 'registrationExpiry', label: 'الاستمارة (Registration)' },
@@ -286,69 +289,85 @@ export default function Onboarding() {
                     { key: 'inspectionExpiry', label: 'الفحص الدوري' },
                   ].map(f => (
                     <div key={f.key} className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">{f.label}</label>
+                      <label className="text-sm font-medium text-foreground">{f.label}</label>
                       <input type="date" value={formData[f.key as keyof CarFormData] as string}
                         onChange={e => update(f.key as keyof CarFormData, e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-white focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {step === 4 && (
+            {step === 3 && (
               <div className="space-y-6">
-                <h2 className="text-xl font-bold text-white mb-6">القطع الاستهلاكية وقراءة العداد (اختياري)</h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">القطع الاستهلاكية وقراءة العداد (اختياري)</h2>
                 {/* Mileage */}
                 <div className="bg-background p-5 rounded-2xl border border-border space-y-3">
-                  <h3 className="font-medium text-white">قراءة العداد (الكيلومتراج)</h3>
+                  <h3 className="font-medium text-foreground">قراءة العداد (الكيلومتراج)</h3>
                   <p className="text-xs text-muted-foreground">سيتم حساب موعد تغيير الزيت القادم تلقائياً بناءً على نوع الزيت المختار.</p>
                   <input type="number" placeholder="مثال: 45000" value={formData.lastMileage || ''}
                     onChange={e => update('lastMileage', parseInt(e.target.value) || null)}
-                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                 </div>
                 {/* Battery */}
                 <div className="bg-background p-5 rounded-2xl border border-border space-y-4">
-                  <h3 className="font-medium text-white">سجل البطارية</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-foreground">سجل البطارية</h3>
+                    <button type="button" onClick={() => user?.plan !== 'free' ? document.getElementById('battery-invoice-onboarding')?.click() : setShowUpgradeModal(true)} 
+                      className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                      <Upload className="w-3 h-3" /> إرفاق فاتورة {user?.plan === 'free' && <Lock className="w-3 h-3 ml-1 inline" />}
+                    </button>
+                    <input type="file" id="battery-invoice-onboarding" className="hidden" accept="image/*,.pdf" />
+                  </div>
+                  {user?.plan === 'free' && <p className="text-[10px] text-primary mt-1">(إرفاق الفاتورة ميزة للمشتركين فقط)</p>}
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">تاريخ تغيير البطارية</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">تاريخ تغيير البطارية</label>
                       <input type="date" value={formData.batteryInstallDate} onChange={e => update('batteryInstallDate', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">العمر المتوقع (أشهر)</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">العمر المتوقع (أشهر)</label>
                       <input type="number" placeholder="مثال: 24" value={formData.batteryWarrantyMonths || ''}
                         onChange={e => update('batteryWarrantyMonths', parseInt(e.target.value) || null)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">الماركة / النوع</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">الماركة / النوع</label>
                       <input type="text" placeholder="مثال: Bosch 60Ah" value={formData.batteryBrand || ''}
                         onChange={e => update('batteryBrand', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none transition-colors" dir="ltr" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none transition-colors" dir="ltr" />
                     </div>
                   </div>
                 </div>
                 {/* Tires */}
                 <div className="bg-background p-5 rounded-2xl border border-border space-y-4">
-                  <h3 className="font-medium text-white">سجل الإطارات</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-foreground">سجل الإطارات</h3>
+                    <button type="button" onClick={() => user?.plan !== 'free' ? document.getElementById('tire-invoice-onboarding')?.click() : setShowUpgradeModal(true)} 
+                      className="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                      <Upload className="w-3 h-3" /> إرفاق فاتورة {user?.plan === 'free' && <Lock className="w-3 h-3 ml-1 inline" />}
+                    </button>
+                    <input type="file" id="tire-invoice-onboarding" className="hidden" accept="image/*,.pdf" />
+                  </div>
+                  {user?.plan === 'free' && <p className="text-[10px] text-primary mt-1">(إرفاق الفاتورة ميزة للمشتركين فقط)</p>}
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">تاريخ تغيير الإطارات</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">تاريخ تغيير الإطارات</label>
                       <input type="date" value={formData.tireInstallDate} onChange={e => update('tireInstallDate', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">العمر المتوقع (أشهر)</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">العمر المتوقع (أشهر)</label>
                       <input type="number" placeholder="مثال: 36" value={formData.tireWarrantyMonths || ''}
                         onChange={e => update('tireWarrantyMonths', parseInt(e.target.value) || null)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none font-num transition-colors" dir="ltr" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none font-num transition-colors" dir="ltr" />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-400 mb-1 block">الماركة / المقاس</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">الماركة / المقاس</label>
                       <input type="text" placeholder="مثال: Michelin 205/55 R16" value={formData.tireSize || ''}
                         onChange={e => update('tireSize', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-white focus:border-primary outline-none transition-colors" dir="ltr" />
+                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none transition-colors" dir="ltr" />
                     </div>
                   </div>
                 </div>
@@ -362,19 +381,50 @@ export default function Onboarding() {
                   </div>
                 ) : (
                   <div className="bg-background p-5 rounded-2xl border border-border space-y-4 mt-6">
-                    <h3 className="font-medium text-white flex items-center gap-2"><Upload className="w-4 h-4 text-primary" /> حفظ الفواتير للضمان</h3>
+                    <h3 className="font-medium text-foreground flex items-center gap-2"><Upload className="w-4 h-4 text-primary" /> حفظ الفواتير للضمان</h3>
                     <p className="text-xs text-muted-foreground">قم برفع صور الفواتير والضمانات الخاصة بالبطارية أو الإطارات للرجوع إليها لاحقاً.</p>
                     <div 
                       onClick={() => alert("سيتم تفعيل خدمة التخزين السحابي قريباً")}
-                      className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-white/5 transition-colors cursor-pointer group">
+                      className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-black/5 transition-colors cursor-pointer group">
                       <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                         <Upload className="w-5 h-5" />
                       </div>
-                      <span className="text-sm font-medium text-slate-300 block mb-1">اضغط هنا لرفع الصور والملفات</span>
+                      <span className="text-sm font-medium text-foreground block mb-1">اضغط هنا لرفع الصور والملفات</span>
                       <span className="text-xs text-muted-foreground">يدعم PDF, JPG, PNG بحجم أقصى 5MB</span>
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {step === 4 && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold text-foreground mb-6">مراجعة وتأكيد</h2>
+                <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-2xl text-center">
+                  <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-bold text-foreground mb-2">كل شيء جاهز!</h3>
+                  <p className="text-muted-foreground text-sm">اضغط "إكمال الإضافة" لحفظ بيانات سيارتك والانتقال للوحة التحكم.</p>
+                </div>
+                <div className="bg-background p-5 rounded-2xl border border-border space-y-3">
+                  <h3 className="font-bold text-foreground text-sm">ملخص البيانات</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-card p-3 rounded-xl border border-border">
+                      <span className="text-xs text-muted-foreground block mb-1">اسم السيارة</span>
+                      <span className="font-bold text-foreground">{formData.name || "—"}</span>
+                    </div>
+                    <div className="bg-card p-3 rounded-xl border border-border">
+                      <span className="text-xs text-muted-foreground block mb-1">سنة الصنع</span>
+                      <span className="font-bold text-foreground font-num">{formData.modelYear || "—"}</span>
+                    </div>
+                    <div className="bg-card p-3 rounded-xl border border-border">
+                      <span className="text-xs text-muted-foreground block mb-1">نوع القير</span>
+                      <span className="font-bold text-foreground">{formData.transmissionType === 'automatic' ? 'اوتوماتيك' : 'عادي'}</span>
+                    </div>
+                    <div className="bg-card p-3 rounded-xl border border-border">
+                      <span className="text-xs text-muted-foreground block mb-1">نوع الزيت</span>
+                      <span className="font-bold text-foreground font-num">{formData.engineOilType === '5000km' ? '5,000 كم' : formData.engineOilType === '10000km' ? '10,000 كم' : 'مخصص'}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
@@ -382,7 +432,7 @@ export default function Onboarding() {
 
         <div className="mt-10 pt-6 border-t border-border flex items-center justify-between">
           <button onClick={() => setStep(s => Math.max(1, s - 1))}
-            className={`px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors ${step === 1 ? 'opacity-0 pointer-events-none' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}>
+            className={`px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors ${step === 1 ? 'opacity-0 pointer-events-none' : 'text-foreground hover:text-foreground hover:bg-black/5'}`}>
             <ChevronRight className="w-4 h-4" /> السابق
           </button>
           <button onClick={handleNext} disabled={isSubmitting || (step === 1 && (!formData.name || !formData.modelYear))}
@@ -401,10 +451,10 @@ export default function Onboarding() {
             <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto mb-4">
               <Crown className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">رقي حسابك للبرو</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">رقي حسابك للبرو</h3>
             <p className="text-muted-foreground mb-6">احفظ فواتير القطع والبطاريات بضغطة زر.</p>
             <div className="flex gap-3">
-              <button onClick={() => setShowUpgradeModal(false)} className="flex-1 py-3 rounded-xl border border-border text-white hover:bg-white/5 transition-colors">إلغاء</button>
+              <button onClick={() => setShowUpgradeModal(false)} className="flex-1 py-3 rounded-xl border border-border text-foreground hover:bg-black/5 transition-colors">إلغاء</button>
               <button onClick={() => { setShowUpgradeModal(false); setLocation("/pricing"); }} className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold transition-colors">عرض الباقات</button>
             </div>
           </motion.div>

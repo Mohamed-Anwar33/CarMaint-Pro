@@ -11,6 +11,7 @@ export interface AppUser {
   name: string | null;
   role: UserRole;
   plan: UserPlan;
+  accountType: string;
   onboardingCompleted: boolean;
   createdAt: string;
 }
@@ -20,7 +21,7 @@ interface AuthContextType {
   supabaseUser: SupabaseUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: UserRole) => Promise<void>;
+  register: (name: string, email: string, password: string, role?: UserRole, accountType?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<AppUser>) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -47,6 +48,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
         name: user.name,
         role: user.role as UserRole,
         plan: user.plan as UserPlan,
+        accountType: user.account_type || "individual",
         onboardingCompleted: user.onboarding_completed,
         createdAt: user.created_at,
       };
@@ -66,6 +68,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
         name: null,
         role: "manager",
         plan: "free",
+        account_type: "individual",
         onboarding_completed: false,
       })
       .select()
@@ -80,6 +83,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
         name: null,
         role: "manager" as UserRole,
         plan: "free" as UserPlan,
+        accountType: "individual",
         onboardingCompleted: false,
         createdAt: new Date().toISOString(),
       };
@@ -91,6 +95,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       name: newUser.name,
       role: newUser.role as UserRole,
       plan: newUser.plan as UserPlan,
+      accountType: newUser.account_type || "individual",
       onboardingCompleted: newUser.onboarding_completed,
       createdAt: newUser.created_at,
     };
@@ -103,6 +108,7 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       name: null,
       role: "manager" as UserRole,
       plan: "free" as UserPlan,
+      accountType: "individual",
       onboardingCompleted: false,
       createdAt: new Date().toISOString(),
     };
@@ -181,13 +187,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: UserRole = "manager") => {
+  const register = async (name: string, email: string, password: string, role: UserRole = "manager", accountType: string = "individual") => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name, role } },
+        options: { data: { name, role, account_type: accountType } },
       });
       if (error) throw new Error(error.message);
       if (!data.user) throw new Error("فشل في إنشاء الحساب");
@@ -199,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: name,
         role: role,
         plan: "free",
+        account_type: accountType,
         onboarding_completed: false
       });
       if (insertErr) {

@@ -14,8 +14,8 @@ export default function NotFound() {
           <SearchX className="w-10 h-10 text-destructive" />
         </div>
 
-        <h1 className="text-6xl font-black text-white mb-2">٤٠٤</h1>
-        <h2 className="text-xl font-bold text-white mb-3">الصفحة غير موجودة</h2>
+        <h1 className="text-6xl font-black text-foreground mb-2">٤٠٤</h1>
+        <h2 className="text-xl font-bold text-foreground mb-3">الصفحة غير موجودة</h2>
         <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
           عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها. تأكد من الرابط وحاول مرة أخرى.
         </p>
@@ -29,7 +29,7 @@ export default function NotFound() {
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-card border border-border text-white font-medium hover:bg-card/80 transition-all"
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-card border border-border text-foreground font-medium hover:bg-card/80 transition-all"
           >
             <ArrowRight className="w-4 h-4" /> العودة للخلف
           </button>

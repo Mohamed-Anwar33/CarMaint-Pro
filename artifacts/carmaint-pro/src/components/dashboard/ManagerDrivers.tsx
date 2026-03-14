@@ -45,7 +45,7 @@ export function ManagerDrivers() {
           userDrivers.push({
             id: inv.id,
             email: inv.driver_email,
-            name: "سائق مدعو",
+            name: "عضو مدعو",
             status: "pending",
             carId: inv.car_id,
             carName: inv.cars?.name || "سيارة",
@@ -67,7 +67,7 @@ export function ManagerDrivers() {
           userDrivers.push({
             id: car.driver_id,
             email: "",
-            name: car.driver_name || "سائق",
+            name: car.driver_name || "عضو عائلة",
             status: "registered",
             carId: car.id,
             carName: car.name,
@@ -101,7 +101,7 @@ export function ManagerDrivers() {
   };
 
   const handleRemove = async (carId: string, driverId: string) => {
-    if (!confirm("هل أنت متأكد من إزالة هذا السائق من السيارة؟")) return;
+    if (!confirm("هل أنت متأكد من إزالة هذا العضو من السيارة؟")) return;
     setActionLoading(`${carId}-${driverId}`);
     try {
       const { error } = await supabase
@@ -135,9 +135,9 @@ export function ManagerDrivers() {
         <div className="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mb-4">
           <Users className="w-10 h-10 text-secondary opacity-80" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">لا يوجد أي سائقين أو دعوات</h3>
+        <h3 className="text-xl font-bold text-foreground mb-2">لا يوجد أي أعضاء أو دعوات</h3>
         <p className="text-sm text-muted-foreground max-w-sm">
-          لم تقم بدعوة أي سائق حتى الآن. قم بالذهاب لإدارة السيارات وإرسال دعوة لسائقك الأول.
+          لم تقم بدعوة أي فرد من العائلة حتى الآن. قم بالذهاب لإدارة السيارات وإرسال دعوة لعائلتك.
         </p>
       </div>
     );
@@ -152,7 +152,7 @@ export function ManagerDrivers() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-amber-500" />
-            <h2 className="text-lg font-bold text-white">دعوات قيد الانتظار ({pendingDrivers.length})</h2>
+            <h2 className="text-lg font-bold text-foreground">دعوات قيد الانتظار ({pendingDrivers.length})</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingDrivers.map((driver, i) => (
@@ -166,10 +166,10 @@ export function ManagerDrivers() {
                     </div>
                     <span className="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-1 rounded border border-amber-500/20">قيد الانتظار</span>
                   </div>
-                  <h3 className="text-sm font-medium text-slate-300 mb-1 truncate" dir="ltr">{driver.email}</h3>
+                  <h3 className="text-sm font-medium text-foreground mb-1 truncate" dir="ltr">{driver.email}</h3>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
                     <Car className="w-3.5 h-3.5" />
-                    <span className="truncate">دعوة لقيادة: <strong className="text-white font-normal">{driver.carName}</strong></span>
+                    <span className="truncate">دعوة لقيادة: <strong className="text-foreground font-normal">{driver.carName}</strong></span>
                   </div>
                   
                   <button 
@@ -191,7 +191,7 @@ export function ManagerDrivers() {
         <section>
           <div className="flex items-center gap-2 mb-4 mt-6">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-lg font-bold text-white">السائقين النشطين ({activeDrivers.length})</h2>
+            <h2 className="text-lg font-bold text-foreground">أفراد العائلة النشطين ({activeDrivers.length})</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeDrivers.map((driver, i) => (
@@ -205,12 +205,12 @@ export function ManagerDrivers() {
                     </div>
                     <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded border border-emerald-500/20">نشط</span>
                   </div>
-                  <h3 className="font-bold text-white text-base mb-0.5 truncate">{driver.name}</h3>
+                  <h3 className="font-bold text-foreground text-base mb-0.5 truncate">{driver.name}</h3>
                   <p className="text-xs text-muted-foreground mb-3 truncate" dir="ltr">{driver.email}</p>
                   
-                  <div className="flex items-center gap-1.5 text-xs text-slate-300 mt-3 pt-3 border-t border-border/50">
+                  <div className="flex items-center gap-1.5 text-xs text-foreground mt-3 pt-3 border-t border-border/50">
                     <Car className="w-3.5 h-3.5 text-secondary" />
-                    <span className="truncate">يقود: <strong className="text-white">{driver.carName}</strong></span>
+                    <span className="truncate">يقود: <strong className="text-foreground">{driver.carName}</strong></span>
                   </div>
 
                   <button 

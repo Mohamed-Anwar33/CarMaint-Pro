@@ -68,13 +68,13 @@ export function PWAInstallPrompt() {
           className="fixed bottom-4 left-4 right-4 z-[100] max-w-sm mx-auto"
           dir="rtl"
         >
-          <div className="bg-slate-800 border border-sky-400/30 rounded-2xl p-4 shadow-2xl shadow-black/50 relative overflow-hidden">
+          <div className="bg-card border border-border border border-sky-400/30 rounded-2xl p-4 shadow-2xl shadow-black/50 relative overflow-hidden">
             {/* Glow effect */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
             
             <button
               onClick={handleDismiss}
-              className="absolute top-3 left-3 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-50 cursor-pointer"
+              className="absolute top-3 left-3 w-6 h-6 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-50 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -88,7 +88,7 @@ export function PWAInstallPrompt() {
                 <div className="mb-1">
                   <CarMaintLogo size="sm" animated={false} />
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed mb-3">
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                   {isIOS
                     ? 'اضغط على أيقونة المشاركة ← "إضافة إلى الشاشة الرئيسية" لتحميل التطبيق'
                     : "حمّل التطبيق على هاتفك للوصول السريع وتجربة أفضل — حتى بدون إنترنت!"
@@ -98,7 +98,7 @@ export function PWAInstallPrompt() {
                 {!isIOS && (
                   <button
                     onClick={handleInstall}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-orange-500 to-orange-600 text-white text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all active:scale-95"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-l from-orange-500 to-orange-600 text-foreground text-sm font-bold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all active:scale-95"
                   >
                     <Download className="w-4 h-4" />
                     تحميل التطبيق مجاناً

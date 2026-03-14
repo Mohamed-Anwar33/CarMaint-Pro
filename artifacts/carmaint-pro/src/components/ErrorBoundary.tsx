@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="w-20 h-20 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-10 h-10 text-destructive" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">حدث خطأ غير متوقع</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">حدث خطأ غير متوقع</h1>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
               نعتذر عن هذا الخطأ. يمكنك تحديث الصفحة أو العودة للصفحة الرئيسية.
             </p>
@@ -58,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-card border border-border text-white font-medium hover:bg-card/80 transition-all"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-card border border-border text-foreground font-medium hover:bg-card/80 transition-all"
               >
                 <Home className="w-4 h-4" /> الرئيسية
               </button>

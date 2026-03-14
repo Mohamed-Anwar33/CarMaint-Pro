@@ -32,6 +32,7 @@ export type Database = {
           name: string | null;
           role: "manager" | "driver" | "both" | "admin";
           plan: "free" | "pro" | "family_small" | "family_large";
+          account_type: string | null;
           onboarding_completed: boolean;
           created_at: string;
         };
@@ -46,7 +47,7 @@ export type Database = {
           name: string;
           model_year: number;
           transmission_type: "automatic" | "manual";
-          engine_oil_type: "5000km" | "10000km";
+          engine_oil_type: "5000km" | "10000km" | "custom";
           coolant_fill_date: string | null;
           coolant_next_alert_date: string | null;
           registration_expiry: string | null;
@@ -66,6 +67,10 @@ export type Database = {
           engine_oil_custom_km: number | null;
           battery_brand: string | null;
           tire_size: string | null;
+          invoices: string[] | null;
+          battery_invoice: string | null;
+          tire_invoice: string | null;
+          last_report_date: string | null;
           created_at: string;
         };
       };
@@ -74,7 +79,8 @@ export type Database = {
           id: string;
           title: string;
           message: string;
-          type: "offer" | "update";
+          type: "offer" | "update" | "tip";
+          image_url: string | null;
           active: boolean;
           created_at: string;
         };

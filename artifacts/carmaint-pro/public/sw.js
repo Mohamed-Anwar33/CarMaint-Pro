@@ -1,5 +1,5 @@
-// CarMaint Pro Service Worker — Push Notifications + Offline Cache
-const CACHE_NAME = "carmaint-v1";
+// Mdari Service Worker — Push Notifications + Offline Cache
+const CACHE_NAME = "mdari-v1";
 const APP_URL = self.location.origin;
 
 // ────────────────────────────────────────────────────────────
@@ -29,14 +29,14 @@ self.addEventListener("activate", (event) => {
 // Push — receive and show notification
 // ────────────────────────────────────────────────────────────
 self.addEventListener("push", (event) => {
-  let data = { title: "صيانة سيارتي", body: "لديك تنبيه جديد", tag: "general", url: "/" };
+  let data = { title: "مداري | Mdari", body: "لديك تنبيه جديد", tag: "general", url: "/" };
   try { data = { ...data, ...event.data.json() }; } catch (_) {}
 
   const options = {
     body: data.body,
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: data.tag || "carmaint",
+    tag: data.tag || "mdari",
     dir: "rtl",
     lang: "ar",
     vibrate: [200, 100, 200],

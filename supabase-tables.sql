@@ -140,14 +140,9 @@ CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active);
 -- ============================================
 -- SAMPLE DATA (optional - delete if not needed)
 -- ============================================
-INSERT INTO announcements (id, title, message, type, active)
-VALUES (
-  gen_random_uuid()::TEXT,
-  'مرحباً بك في صيانة سيارتي',
-  'نسعد بانضمامك إلى منصة صيانة سيارتي. ابدأ الآن بإضافة سيارتك وتتبع صيانتها بسهولة.',
-  'update',
-  true
-)
-ON CONFLICT DO NOTHING;
+-- ============================================
+-- SAMPLE DATA (optional - delete if not needed)
+-- ============================================
+-- Welcome announcement disabled.
 
 SELECT 'تم إنشاء جداول قاعدة البيانات بنجاح! ✅' AS status;

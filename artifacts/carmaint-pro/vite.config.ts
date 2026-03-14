@@ -23,9 +23,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       manifest: {
-        name: 'CarMaint Pro',
-        short_name: 'CarMaint',
-        description: 'نظام المتابعة الشامل للسائقين',
+        name: 'مداري | Mdari',
+        short_name: 'Mdari',
+        description: 'المنصة المتكاملة لإدارة وثائق مركبتك ومتابعة عائلتك',
         theme_color: '#f97316',
         background_color: '#020817',
         display: 'standalone',

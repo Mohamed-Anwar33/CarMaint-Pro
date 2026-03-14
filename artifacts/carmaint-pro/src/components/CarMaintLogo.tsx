@@ -64,7 +64,7 @@ function injectStyles() {
       font-family: 'Montserrat', sans-serif;
       font-weight: 700;
       letter-spacing: 0.07em;
-      color: #f97316;
+      color: #F59E0B;
     }
   `;
   document.head.appendChild(el);
@@ -87,7 +87,7 @@ export function CarMaintLogo({
   const circleStroke = theme === "dark" ? "#38bdf8" : "#0ea5e9";
   const wrenchFill   = theme === "dark" ? "#38bdf8" : "#0284c7";
   const wrenchStroke = theme === "dark" ? "#7dd3fc" : "#0369a1";
-  const arabicColor  = theme === "dark" ? "#f1f5f9" : "#0f172a";
+  const arabicColor  = theme === "dark" ? "#ffffff" : "#1C1917";
 
   return (
     <div className={`cml-logo-root ${className}`} style={style}>
@@ -116,20 +116,20 @@ export function CarMaintLogo({
           className={animated ? "cml-animated-gear" : ""}
           style={{ transformOrigin: "22px 50px" }}
         >
-          <circle cx="22" cy="50" r="5" fill="none" stroke="#f97316" strokeWidth="2" />
-          <circle cx="22" cy="50" r="2"  fill="#f97316" />
-          <rect x="21" y="43.5" width="2" height="3" rx="1" fill="#f97316" />
-          <rect x="21" y="53.5" width="2" height="3" rx="1" fill="#f97316" />
-          <rect x="15"  y="49"  width="3" height="2" rx="1" fill="#f97316" />
-          <rect x="26"  y="49"  width="3" height="2" rx="1" fill="#f97316" />
+          <circle cx="22" cy="50" r="5" fill="none" stroke="#F59E0B" strokeWidth="2" />
+          <circle cx="22" cy="50" r="2"  fill="#F59E0B" />
+          <rect x="21" y="43.5" width="2" height="3" rx="1" fill="#F59E0B" />
+          <rect x="21" y="53.5" width="2" height="3" rx="1" fill="#F59E0B" />
+          <rect x="15"  y="49"  width="3" height="2" rx="1" fill="#F59E0B" />
+          <rect x="26"  y="49"  width="3" height="2" rx="1" fill="#F59E0B" />
         </g>
       </svg>
       <div>
         <div className="cml-text-arabic" style={{ fontSize: arabicSize, color: arabicColor }}>
-          صيانة سيارتي
+          مداري
         </div>
         <div className="cml-text-eng" style={{ fontSize: engSize }}>
-          CarMaint Pro
+          Mdari
         </div>
       </div>
     </div>

@@ -36,7 +36,7 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16" dir="rtl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="bg-card border border-border/50 rounded-3xl p-8 shadow-2xl shadow-black/40 relative overflow-hidden">
+        <div className="bg-card border border-border/50 rounded-3xl p-8 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10">
             <div className="flex justify-center mb-6">
@@ -48,18 +48,18 @@ export default function ForgotPassword() {
                 <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-emerald-400" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-2">تم إرسال الرابط!</h2>
+                <h2 className="text-xl font-bold text-foreground mb-2">تم إرسال الرابط!</h2>
                 <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                  تحقق من بريدك الإلكتروني <span className="text-white font-medium" dir="ltr">{email}</span> واتبع الرابط لإعادة تعيين كلمة المرور.
+                  تحقق من بريدك الإلكتروني <span className="text-foreground font-medium" dir="ltr">{email}</span> واتبع الرابط لإعادة تعيين كلمة المرور.
                 </p>
-                <p className="text-xs text-slate-500 mb-6">لم يصلك البريد؟ تحقق من مجلد الرسائل غير المرغوب فيها (Spam).</p>
+                <p className="text-xs text-muted-foreground mb-6">لم يصلك البريد؟ تحقق من مجلد الرسائل غير المرغوب فيها (Spam).</p>
                 <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all">
                   <ArrowRight className="w-4 h-4" /> العودة لتسجيل الدخول
                 </Link>
               </motion.div>
             ) : (
               <>
-                <h1 className="text-2xl font-black text-white text-center mb-1">نسيت كلمة المرور؟</h1>
+                <h1 className="text-2xl font-black text-foreground text-center mb-1">نسيت كلمة المرور؟</h1>
                 <p className="text-sm text-muted-foreground text-center mb-8">
                   أدخل بريدك الإلكتروني وسنرسل لك رابط لإعادة تعيين كلمة المرور
                 </p>
@@ -73,10 +73,10 @@ export default function ForgotPassword() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">البريد الإلكتروني</label>
                     <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                       placeholder="example@email.com" required dir="ltr" autoComplete="email"
-                      className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary/30 text-white placeholder:text-slate-500 transition-all outline-none" />
+                      className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground transition-all outline-none" />
                   </div>
                   <button type="submit" disabled={submitting}
                     className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">

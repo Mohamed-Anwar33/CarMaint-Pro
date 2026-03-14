@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   name        TEXT,
   role        TEXT NOT NULL DEFAULT 'manager' CHECK (role IN ('manager', 'driver', 'both', 'admin')),
   plan        TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'family_small', 'family_large')),
+  account_type TEXT NOT NULL DEFAULT 'individual' CHECK (account_type IN ('individual', 'family', 'company')),
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -37,6 +38,9 @@ CREATE TABLE IF NOT EXISTS public.cars (
   last_mileage            INTEGER,
   next_oil_change_mileage INTEGER,
   driver_name             TEXT,
+  invoices                TEXT[] DEFAULT '{}',
+  battery_invoice         TEXT,
+  tire_invoice            TEXT,
   created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -45,7 +49,8 @@ CREATE TABLE IF NOT EXISTS public.announcements (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title      TEXT NOT NULL,
   message    TEXT NOT NULL,
-  type       TEXT NOT NULL DEFAULT 'update' CHECK (type IN ('offer', 'update')),
+  image_url  TEXT,
+  type       TEXT NOT NULL DEFAULT 'update' CHECK (type IN ('offer', 'update', 'tip')),
   active     BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -114,14 +119,15 @@ CREATE POLICY "invitations_insert" ON public.invitations FOR INSERT WITH CHECK (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, role, plan, onboarding_completed)
+  INSERT INTO public.profiles (id, email, name, role, plan, onboarding_completed, account_type)
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'name',
     COALESCE(NEW.raw_user_meta_data->>'role', 'manager'),
     'free',
-    FALSE
+    FALSE,
+    COALESCE(NEW.raw_user_meta_data->>'account_type', 'individual')
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -164,3 +170,9 @@ CREATE TABLE IF NOT EXISTS public.notification_log (
 ALTER TABLE public.notification_log ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "notif_log_own" ON public.notification_log FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "notif_log_insert" ON public.notification_log FOR INSERT WITH CHECK (TRUE);
+
+-- ─── Storage Bucket (for invoices/receipts) ───────────────
+INSERT INTO storage.buckets (id, name, public) VALUES ('invoices', 'invoices', true) ON CONFLICT DO NOTHING;
+CREATE POLICY "Invoices Public Access" ON storage.objects FOR SELECT USING ( bucket_id = 'invoices' );
+CREATE POLICY "Invoices Auth Insert" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'invoices' AND auth.role() = 'authenticated' );
+CREATE POLICY "Invoices Auth Delete" ON storage.objects FOR DELETE USING ( bucket_id = 'invoices' AND auth.role() = 'authenticated' );

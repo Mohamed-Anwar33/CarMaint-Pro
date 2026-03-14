@@ -1,7 +1,7 @@
 {
-  "name": "صيانة سيارتي - CarMaint Pro",
-  "short_name": "CarMaint",
-  "description": "تتبع صيانة سيارتك، إدارة وثائقها، ومتابعة السائقين بكل سهولة",
+  "name": "مداري - Mdari",
+  "short_name": "Mdari",
+  "description": "تتبع صيانة سيارتك، إدارة وثائقها، ومتابعة عائلتك بكل سهولة",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",

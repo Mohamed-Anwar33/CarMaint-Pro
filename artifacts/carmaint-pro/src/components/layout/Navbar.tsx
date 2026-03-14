@@ -14,30 +14,32 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full bg-[#0f172a]/95 text-white backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <CarMaintLogo size="sm" animated={true} />
+          <CarMaintLogo size="lg" theme="dark" animated={true} />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           {!user && (
             <>
-              <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">المميزات</Link>
-              <Link href="/pricing" className={cn("text-sm font-medium hover:text-primary transition-colors", location === '/pricing' ? "text-primary" : "text-muted-foreground")}>الأسعار</Link>
+              <Link href="/#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">المميزات</Link>
+              <Link href="/pricing" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/pricing' ? "text-white" : "text-slate-300")}>الأسعار</Link>
             </>
           )}
           {user && (
-            <Link href="/dashboard" className={cn("text-sm font-medium hover:text-primary transition-colors", location === '/dashboard' ? "text-primary" : "text-muted-foreground")}>لوحة القيادة</Link>
+            <Link href="/dashboard" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/dashboard' ? "text-white" : "text-slate-300")}>لوحة القيادة</Link>
           )}
           {user?.role === 'admin' && (
-            <Link href="/admin" className={cn("text-sm font-medium hover:text-primary transition-colors flex items-center gap-1", location.startsWith('/admin') ? "text-primary" : "text-muted-foreground")}>
+            <Link href="/admin" className={cn("text-sm font-medium hover:text-white transition-colors flex items-center gap-1", location.startsWith('/admin') ? "text-white" : "text-slate-300")}>
               <Shield className="w-3.5 h-3.5" /> لوحة الإدارة
             </Link>
           )}
+          <Link href="/offers" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/offers' ? "text-white" : "text-slate-300")}>العروض</Link>
+          <Link href="/tips" className={cn("text-sm font-medium hover:text-white transition-colors", location === '/tips' ? "text-white" : "text-slate-300")}>نصائح</Link>
         </nav>
 
         {/* Actions */}
@@ -55,7 +57,7 @@ export function Navbar() {
               <div className="relative">
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary/10 border border-secondary/20 hover:bg-secondary/20 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm border border-primary/30">
                     {(user.name || user.email || "م").charAt(0).toUpperCase()}
@@ -79,22 +81,22 @@ export function Navbar() {
                         className="absolute left-0 mt-2 w-52 rounded-xl bg-card border border-border/50 shadow-xl overflow-hidden z-50 origin-top-left"
                       >
                         <div className="p-3 border-b border-border/50">
-                          <p className="text-sm font-semibold text-white">{user.name || 'مستخدم'}</p>
+                          <p className="text-sm font-semibold text-foreground">{user.name || 'مستخدم'}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                           <span className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
                             {user.role === 'admin' ? 'مسؤول' : user.role === 'manager' ? 'مدير' : user.role === 'driver' ? 'سائق' : 'مدير وسائق'}
                           </span>
                         </div>
                         <div className="p-1">
-                          <Link href="/dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">
+                          <Link href="/dashboard" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors">
                             <LayoutDashboard className="w-4 h-4" /> لوحة القيادة
                           </Link>
                           {user.role === 'admin' && (
-                            <Link href="/admin" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">
+                            <Link href="/admin" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors">
                               <Shield className="w-4 h-4" /> لوحة الإدارة
                             </Link>
                           )}
-                          <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">
+                          <Link href="/settings" onClick={() => setIsDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors">
                             <Settings className="w-4 h-4" /> إعدادات الحساب
                           </Link>
                           <div className="border-t border-border/50 my-1" />
@@ -111,16 +113,16 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-3">
               <Link href="/login" className="text-sm font-medium text-white hover:text-primary transition-colors px-2 py-2 hidden sm:block">دخول</Link>
-              <Link href="/register" className="text-sm font-bold bg-primary text-primary-foreground px-5 py-2.5 rounded-xl shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 transition-all">سجل مجاناً</Link>
+              <Link href="/register" className="text-sm font-bold bg-primary text-white px-5 py-2.5 rounded-xl shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all">سجل مجاناً</Link>
             </div>
           )}
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-card border border-border hover:bg-card/80 transition-colors"
+            className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X className="w-4 h-4 text-white" /> : <Menu className="w-4 h-4 text-white" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
           </button>
         </div>
       </div>
@@ -132,31 +134,39 @@ export function Navbar() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-xl overflow-hidden"
+            className="md:hidden border-t border-white/10 bg-[#0f172a]/95 backdrop-blur-xl overflow-hidden"
           >
-            <div className="px-4 py-3 space-y-1">
+            <div className="px-4 py-6 space-y-2">
               {!user && (
                 <>
-                  <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">المميزات</Link>
-                  <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">الأسعار</Link>
-                  <div className="pt-2 grid grid-cols-2 gap-2">
-                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block text-center px-4 py-2.5 rounded-xl border border-border text-sm text-white font-medium transition-colors hover:bg-white/5">دخول</Link>
-                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="block text-center px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold transition-colors">سجل مجاناً</Link>
+                  <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">المميزات</Link>
+                  <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">الأسعار</Link>
+                  <Link href="/offers" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">العروض</Link>
+                  <Link href="/tips" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">نصائح</Link>
+                  <div className="pt-4 grid grid-cols-2 gap-3">
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="block text-center px-4 py-3 rounded-xl border border-white/20 text-sm text-white font-medium transition-colors hover:bg-white/10">دخول</Link>
+                    <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="block text-center px-4 py-3 rounded-xl bg-primary text-white text-sm font-bold shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-colors">سجل مجاناً</Link>
                   </div>
                 </>
               )}
               {user && (
                 <>
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">
-                    <LayoutDashboard className="w-4 h-4" /> لوحة القيادة
+                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                    <LayoutDashboard className="w-5 h-5 text-primary" /> لوحة القيادة
                   </Link>
                   {user.role === 'admin' && (
-                    <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-white hover:bg-white/5 transition-colors">
-                      <Shield className="w-4 h-4" /> لوحة الإدارة
+                    <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                      <Shield className="w-5 h-5 text-emerald-400" /> لوحة الإدارة
                     </Link>
                   )}
-                  <button onClick={async () => { await logout(); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors">
-                    <LogOut className="w-4 h-4" /> تسجيل الخروج
+                  <Link href="/offers" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                    <Crown className="w-5 h-5 text-amber-400" /> العروض
+                  </Link>
+                  <Link href="/tips" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                    <Shield className="w-5 h-5 text-secondary" /> نصائح
+                  </Link>
+                  <button onClick={async () => { await logout(); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-3 mt-4 px-4 py-3 rounded-xl text-base font-medium text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 transition-colors">
+                    <LogOut className="w-5 h-5" /> تسجيل الخروج
                   </button>
                 </>
               )}

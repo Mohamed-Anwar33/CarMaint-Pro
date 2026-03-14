@@ -6,48 +6,15 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type BillingCycle = "monthly" | "yearly";
 
-// ─── Individual Plans ─────────────────────────────────────────────
-const individualPlans = [
-  {
-    id: "free",
-    name: "المجانية",
-    subtitle: "ابدأ مجاناً",
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    cars: 1,
-    trial: null,
-    badge: null,
-    icon: <Zap className="w-5 h-5" />,
-    color: "slate" as const,
-    highlight: false,
-  },
-  {
-    id: "pro_monthly",
-    name: "الفردية الشهرية",
-    subtitle: "للأفراد",
-    monthlyPrice: 9,
-    yearlyPrice: null,
-    cars: 1,
-    trial: "3 أيام تجريبية",
-    badge: null,
-    icon: <Crown className="w-5 h-5" />,
-    color: "primary" as const,
-    highlight: false,
-  },
-  {
-    id: "pro_yearly",
-    name: "الفردية السنوية",
-    subtitle: "وفّر مع الاشتراك السنوي",
-    monthlyPrice: null,
-    yearlyPrice: 99,
-    cars: 1,
-    trial: "108 أيام تجريبية",
-    badge: "الأوفر",
-    icon: <Star className="w-5 h-5" />,
-    color: "secondary" as const,
-    highlight: true,
-  },
-];
+// ─── Constants for exact matching of Arabic table ──────────────────
+const checkCell = "bg-[#dcfce7] border border-white text-center py-2";
+const crossCell = "bg-[#ffe4e6] border border-white text-center py-2";
+const labelCell = "bg-[#dcfce7] py-2 px-3 text-slate-800 border border-white font-medium";
+const checkIcon = "✅";
+const crossIcon = "❌";
+
+const getCellClass = (val: boolean) => val ? checkCell : crossCell;
+const getIcon = (val: boolean) => val ? checkIcon : crossIcon;
 
 // ─── Family Plans ─────────────────────────────────────────────────
 const familyPlans = [
@@ -67,7 +34,7 @@ const familyPlans = [
     name: "العائلة الصغيرة سنوي",
     monthlyPrice: null,
     yearlyPrice: 199,
-    cars: 5,
+    cars: 3,
     points: 348,
     offers: null,
     badge: "موصى به",
@@ -78,7 +45,7 @@ const familyPlans = [
     name: "العائلة الكبيرة شهري",
     monthlyPrice: 29,
     yearlyPrice: null,
-    cars: "غير محدود",
+    cars: 5,
     points: null,
     offers: null,
     badge: null,
@@ -89,7 +56,7 @@ const familyPlans = [
     name: "العائلة الكبيرة سنوي",
     monthlyPrice: null,
     yearlyPrice: 299,
-    cars: "غير محدود",
+    cars: 5,
     points: null,
     offers: 15,
     badge: "الأميز",
@@ -105,55 +72,81 @@ interface Feature {
   section?: string;
 }
 
-const featureSections: { title: string; features: Feature[] }[] = [
+const featureSections: { title: string; features: Feature[]; icon?: React.ReactNode }[] = [
   {
     title: "إعداد السيارة",
+    icon: <span className="text-xl">🚗</span>,
     features: [
-      { label: "عدد السيارات", values: ["1", "1", "1", "3", "5", "غير محدود"] },
-      { label: "تذكيرات الصيانة", values: [true, true, true, true, true, true] },
+      { label: "نوع ناقل الحركة (يدوي / أوتوماتيك) ⚙️", values: [true, true, true, true, true, true] },
+      { label: "فترة تغيير زيت ناقل الحركة (40,000 أو 60,000 كم) 📏", values: [true, true, true, true, true, true] },
+      { label: "تسجيل قراءة العداد الحالية 🔢", values: [true, true, true, true, true, true] },
     ],
   },
   {
-    title: "تذكيرات التغيير",
+    title: "تذكيرات الزيوت",
+    icon: <span className="text-xl">🛢️</span>,
     features: [
-      { label: "تتبع الحركة + قراءة الكيلومترات", values: [true, true, true, true, true, true] },
-      { label: "تذكير قبل الموعد (15 / 30 يوم)", values: ["15 يوم", "15 يوم", "30 يوم", "30 يوم", "30 يوم", "30 يوم"] },
-      { label: "إيميل بالموعد", values: [true, true, true, true, true, true] },
-      { label: "تذكير لولي الأمر", values: [false, false, true, true, true, true] },
-      { label: "إشعار SMS", values: [false, false, true, true, true, true] },
+      { label: "زيت المحرك — بالأيام والكيلومترات 🛢️", values: [true, true, true, true, true, true] },
+      { label: "زيت ناقل الحركة — حسب النوع المختار ⚙️", values: [true, true, true, true, true, true] },
+      { label: "زيت الفرامل 🔴", values: [true, true, true, true, true, true] },
+      { label: "زيت التوجيه 🔄", values: [true, true, true, true, true, true] },
+      { label: "زيت التبريد (المياه) 🌡️", values: [true, true, true, true, true, true] },
     ],
   },
   {
-    title: "البطارية",
+    title: "الفلاتر",
+    icon: <span className="text-xl">🌀</span>,
     features: [
-      { label: "رفع الفواتير", values: [false, true, true, true, true, true] },
+      { label: "فلتر الهواء 🌀", values: [true, true, true, true, true, true] },
+      { label: "فلتر الوقود ⛽", values: [true, true, true, true, true, true] },
     ],
   },
   {
     title: "وثائق السيارة",
+    icon: <span className="text-xl">📋</span>,
     features: [
-      { label: "تاريخ تجديد التسجيل", values: [true, true, true, true, true, true] },
-      { label: "تاريخ الفحص الدوري", values: [true, true, true, true, true, true] },
-      { label: "تاريخ انتهاء التأمين", values: [true, true, true, true, true, true] },
+      { label: "تاريخ انتهاء الرخصة (اختياري) 📄", values: [true, true, true, true, true, true] },
+      { label: "تاريخ الفحص الدوري 🔍", values: [true, true, true, true, true, true] },
+      { label: "تاريخ انتهاء التأمين 🛡️", values: [true, true, true, true, true, true] },
+      { label: "تاريخ انتهاء الاستيكر 🔖", values: [true, true, true, true, true, true] },
     ],
   },
   {
-    title: "المشاركة والزيارات",
+    title: "البطارية والإطارات",
+    icon: <span className="text-xl">🔋</span>,
     features: [
-      { label: "متابعة السيارات بمركة", values: [false, false, false, true, true, true] },
-      { label: "نظام السائق والأمر", values: [false, false, false, true, true, true] },
+      { label: "متابعة البطارية (تاريخ، ماركة، ضمان) 🔋", values: [true, true, true, true, true, true] },
+      { label: "متابعة الإطارات (تاريخ، مقاس، كيلومترات) 🔄", values: [true, true, true, true, true, true] },
     ],
   },
   {
-    title: "المعلومات المرفقة",
+    title: "التنبيهات والحالة",
+    icon: <span className="text-xl">🔔</span>,
     features: [
-      { label: "المعلومات المرفقة", values: [false, "5%", "5%", "10%", "10%", "15%"] },
+      { label: "مؤشر الحالة التلقائي (أخضر/أصفر/أحمر) 🟢", values: [true, true, true, true, true, true] },
+      { label: "تنبيهات داخل التطبيق 📱", values: [true, true, true, true, true, true] },
+      { label: "تنبيهات بريد إلكتروني 📧", values: [false, true, true, true, true, true] },
+      { label: "على الجوال SMS تنبيهات 💬", values: [false, true, true, true, true, true] },
+    ],
+  },
+  {
+    title: "ميزات إضافية",
+    icon: <span className="text-xl">⭐</span>,
+    features: [
+      { label: "رفع وحفظ فواتير الصيانة 📁", values: [false, true, true, true, true, true] },
+      { label: "قائمة تجديد اختيارية قابلة للتخصيص ☑️", values: [true, true, true, true, true, true] },
+      { label: "ملصقات صيانة مفرغة تشحن مع الاشتراك 🏷️", values: [false, false, "5", false, "10", "15"] },
     ],
   },
 ];
 
-const planHeaders = ["مجاني", "فردي شهري", "سنوي 99", "عائلة صغيرة", "عائلة من", "عائلة ك"];
-const planPrices = ["مجاناً", "108 ريال", "99 ريال", "199 ريال", "228 ريال", "299 ريال"];
+const planHeaders = [
+  <div className="flex flex-col items-center gap-1"><span className="text-xl">🆓</span> مجاني</div>,
+  <div className="flex flex-col items-center gap-1"><span className="text-xl">💎</span> شهري</div>,
+  <div className="flex flex-col items-center gap-1"><span className="text-xl">🏆</span> سنوي</div>,
+  "عائلة شهري", "عائلة سنوي", "عائلة كبيرة"
+];
+const planPrices = ["مجاناً", "ريال 108", "✨ ريال 99", "228 ريال", "199 ريال", "299 ريال"];
 
 // ─── Alert System Rows ────────────────────────────────────────────
 const alertRows = [
@@ -174,7 +167,7 @@ function SectionAccordion({ title, children }: { title: string; children: React.
   const [open, setOpen] = useState(true);
   return (
     <div>
-      <button onClick={() => setOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-2 bg-card/50 border border-border/30 rounded-lg mb-1 text-sm font-bold text-white hover:bg-card transition-colors">
+      <button onClick={() => setOpen(v => !v)} className="w-full flex items-center justify-between px-4 py-2 bg-card/50 border border-border/30 rounded-lg mb-1 text-sm font-bold text-foreground hover:bg-card transition-colors">
         {title}
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
@@ -196,28 +189,50 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-background" dir="rtl">
       {/* Hero */}
-      <section className="relative py-16 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl md:text-5xl font-black text-white mb-4">
-            دليل <span className="text-primary">الخطط</span> والميزات الكامل
-          </h1>
-          <p className="text-muted-foreground text-lg mb-8">اختر الخطة المناسبة لك ولعائلتك</p>
+      <section className="relative pt-32 pb-24 px-4 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px]"></div>
+
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 border border-border shadow-sm mb-6 backdrop-blur-md"
+          >
+            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+            <span className="text-sm font-medium text-foreground">باقات مصممة خصيصاً لاحتياجاتك</span>
+          </motion.div>
+
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-black text-foreground mb-6 tracking-tight leading-[1.1]"
+          >
+            دليل <span className="gradient-text">الخطط</span> والميزات الكامل
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="text-muted-foreground text-xl mb-12 font-medium"
+          >اختر الخطة المناسبة لك ولعائلتك</motion.p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-card border border-border/50">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-border/50 shadow-sm"
+          >
             <button
               onClick={() => setBilling("monthly")}
-              className={cn("px-5 py-2 rounded-xl text-sm font-bold transition-all", billing === "monthly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-white")}
+              className={cn("px-8 py-3 rounded-[14px] text-sm font-bold transition-all", billing === "monthly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground")}
             >شهري</button>
             <button
               onClick={() => setBilling("yearly")}
-              className={cn("px-5 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2", billing === "yearly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-white")}
+              className={cn("px-8 py-3 rounded-[14px] text-sm font-bold transition-all flex items-center gap-2", billing === "yearly" ? "bg-primary text-white shadow-md" : "text-muted-foreground hover:text-foreground")}
             >
               سنوي
-              <span className="text-[10px] bg-emerald-500 text-white rounded-full px-1.5 py-0.5">وفّر 17%</span>
+              <span className={cn("text-[10px] rounded-full px-2 py-0.5", billing === "yearly" ? "bg-white/20 text-white" : "bg-emerald-500/10 text-emerald-600")}>وفّر 17%</span>
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -226,59 +241,258 @@ export default function Pricing() {
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="pb-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 text-primary font-black text-lg flex items-center justify-center">١</span>
-            أولاً: خطة الفرد
-          </h2>
-          <p className="text-muted-foreground mb-6 text-sm">مصممة للأفراد الذين يريدون متابعة صيانة سيارة واحدة وتلقّي التنبيهات في الوقت المناسب.</p>
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-foreground mb-2 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">1</span>
+              خطط الفرد
+            </h2>
+            <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mb-4"></div>
+            <p className="text-muted-foreground font-medium">مصممة لصاحب السيارة الواحدة الذي يريد متابعة صيانة سيارته وتلقي تنبيهات في الوقت المناسب.</p>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {individualPlans.map((plan) => {
-              const price = billing === "yearly" && plan.yearlyPrice !== null ? plan.yearlyPrice : plan.monthlyPrice;
-              const period = plan.yearlyPrice !== null && billing === "yearly" ? "سنوياً" : "شهرياً";
-              return (
-                <motion.div
-                  key={plan.id}
-                  whileHover={{ y: -4 }}
-                  className={cn(
-                    "relative rounded-2xl border p-5 flex flex-col gap-4 transition-all",
-                    plan.highlight
-                      ? "bg-gradient-to-b from-secondary/10 to-secondary/5 border-secondary/30 shadow-lg shadow-secondary/10"
-                      : "bg-card border-border/50"
-                  )}
-                >
-                  {plan.badge && (
-                    <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-secondary text-background text-xs font-black shadow-md">
-                      {plan.badge}
-                    </div>
-                  )}
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", plan.highlight ? "bg-secondary/20 text-secondary" : plan.color === "primary" ? "bg-primary/15 text-primary" : "bg-slate-700 text-slate-400")}>
-                    {plan.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-black text-white text-lg">{plan.name}</h3>
-                    <p className="text-muted-foreground text-xs mt-0.5">{plan.subtitle}</p>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    {price === 0 ? (
-                      <span className="text-3xl font-black text-white">مجاناً</span>
-                    ) : (
-                      <>
-                        <span className="text-3xl font-black text-white">{price}</span>
-                        <span className="text-sm text-muted-foreground">ريال/{period}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2"><span className="text-primary">🚗</span> {plan.cars} سيارة</div>
-                    {plan.trial && <div className="flex items-center gap-2"><span className="text-secondary">⏱️</span> {plan.trial}</div>}
-                  </div>
-                  <Link href="/register" className={cn("mt-auto block text-center py-2.5 rounded-xl font-bold text-sm transition-all", plan.highlight ? "bg-secondary text-background hover:bg-secondary/90" : "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20")}>
-                    ابدأ الآن
-                  </Link>
-                </motion.div>
-              );
-            })}
+          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
+            {/* Top Pricing Summary */}
+            <table className="w-full text-sm mb-12 min-w-[600px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="bg-transparent p-4 border-b border-border"></th>
+                  <th className="bg-muted/50 text-foreground p-4 text-center border-b border-border w-[20%] rounded-tr-2xl font-bold">مجاني <span className="text-lg">🆓</span></th>
+                  <th className="bg-primary/5 text-primary p-4 text-center border-b border-border w-[20%] font-bold">شهري <span className="text-lg">💎</span></th>
+                  <th className="bg-secondary/5 text-secondary p-4 text-center border-b border-border w-[20%] rounded-tl-2xl font-bold">سنوي <span className="text-lg">🏆</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">السعر</td>
+                  <td className="p-4 text-center text-emerald-500 font-bold border-b border-border/50">مجاناً</td>
+                  <td className="p-4 text-center text-primary font-bold border-b border-border/50">ريال / شهر <span className="font-black text-xl">9</span></td>
+                  <td className="p-4 text-center text-secondary font-bold border-b border-border/50">ريال / سنة <span className="font-black text-xl">99</span></td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">ما تدفعه سنوياً</td>
+                  <td className="p-4 text-center text-muted-foreground border-b border-border/50">—</td>
+                  <td className="p-4 text-center text-muted-foreground border-b border-border/50 font-medium">108 ريال</td>
+                  <td className="p-4 text-center text-emerald-500 font-bold border-b border-border/50 bg-emerald-500/5">✨ 99 ريال</td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">عدد السيارات</td>
+                  <td className="p-4 text-center border-b border-border/50 font-bold text-foreground">1</td>
+                  <td className="p-4 text-center border-b border-border/50 font-bold text-foreground">1</td>
+                  <td className="p-4 text-center border-b border-border/50 font-bold text-foreground">1</td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50 rounded-b-2xl">الملصقات</td>
+                  <td className="p-4 text-center text-muted-foreground border-b border-border/50 rounded-b-2xl">—</td>
+                  <td className="p-4 text-center text-muted-foreground border-b border-border/50">—</td>
+                  <td className="p-4 text-center text-secondary font-bold border-b border-border/50 bg-secondary/5 rounded-bl-2xl">5 ملصقات 🏷️</td>
+                </tr>
+              </tbody>
+            </table>
+            {/* Detailed Features Title */}
+            <h3 className="text-xl font-bold text-foreground mb-6">جدول الميزات التفصيلي</h3>
+
+            {/* Detailed Features Table */}
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-sm min-w-[600px] border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="bg-muted text-foreground p-4 text-right border-b border-border border-l w-[40%] font-bold">الميزة</th>
+                    <th className="bg-muted text-foreground p-4 text-center border-b border-border border-l w-[20%] font-bold">مجاني <span className="text-lg">🆓</span></th>
+                    <th className="bg-muted text-primary p-4 text-center border-b border-border border-l w-[20%] font-bold">شهري <span className="text-lg">💎</span></th>
+                    <th className="bg-muted text-secondary p-4 text-center border-b border-border w-[20%] font-bold">سنوي <span className="text-lg">🏆</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Section 1 */}
+                  <tr>
+                    <td colSpan={4} className="bg-primary/5 text-primary font-bold py-3 px-4 border-b border-border">إعداد السيارة 🚗</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">نوع ناقل الحركة (يدوي / أوتوماتيك) ⚙️</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">فترة تغيير زيت ناقل الحركة (40,000 أو 60,000 كم) 📏</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">تسجيل قراءة العداد الحالية 🔢</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 2 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#fff7ed] text-[#ea580c] font-bold py-2 px-3 border border-white">تذكيرات الزيوت 🛢️</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">زيت المحرك — بالأيام والكيلومترات 🛢️</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">زيت ناقل الحركة — حسب النوع المختار ⚙️</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">زيت الفرامل 🔴</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">زيت التوجيه 🔄</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className="bg-[#f8fafc] py-2 px-3 text-slate-700 border border-white">زيت التبريد (المياه) 🌡️</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 3 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#f0fdf4] text-[#16a34a] font-bold py-2 px-3 border border-white">الفلاتر 🌀</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>فلتر الهواء 🌀</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>فلتر الوقود ⛽</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 4 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#f0f9ff] text-[#0284c7] font-bold py-2 px-3 border border-white">وثائق السيارة 📋</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تاريخ انتهاء الرخصة (اختياري) 📄</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تاريخ الفحص الدوري 🔍</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تاريخ انتهاء التأمين 🛡️</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تاريخ انتهاء الاستيكر 🔖</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 5 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#faf5ff] text-[#9333ea] font-bold py-2 px-3 border border-white">البطارية والإطارات 🔋</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>متابعة البطارية (تاريخ، ماركة، ضمان) 🔋</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>متابعة الإطارات (تاريخ، مقاس، كيلومترات) 🔄</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 6 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#fefce8] text-[#ca8a04] font-bold py-2 px-3 border border-white">التنبيهات والحالة 🔔</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>مؤشر الحالة التلقائي (أخضر/أصفر/أحمر) 🟢</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تنبيهات داخل التطبيق 📱</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>تنبيهات بريد إلكتروني 📧</td>
+                  <td className={getCellClass(false)}>{getIcon(false)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>على الجوال SMS تنبيهات 💬</td>
+                  <td className={getCellClass(false)}>{getIcon(false)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+
+                {/* Section 7 */}
+                <tr>
+                  <td colSpan={4} className="bg-[#fffbeb] text-[#d97706] font-bold py-2 px-3 border border-white">ميزات إضافية ⭐</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>رفع وحفظ فواتير الصيانة 📁</td>
+                  <td className={getCellClass(false)}>{getIcon(false)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>قائمة تجديد اختيارية قابلة للتخصيص ☑️</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+                <tr>
+                  <td className={labelCell}>5 ملصقات صيانة مفرغة تشحن مع الاشتراك 🏷️</td>
+                  <td className={getCellClass(false)}>{getIcon(false)}</td>
+                  <td className={getCellClass(false)}>{getIcon(false)}</td>
+                  <td className={getCellClass(true)}>{getIcon(true)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+            {/* Footer Note box */}
+            <div className="mt-4 p-4 rounded-sm bg-[#fffbeb] border border-[#fde68a] text-slate-700 text-sm flex items-start gap-3 shadow-sm font-medium">
+              <span className="text-2xl pt-1">🏷️</span>
+              <p>
+                الملصقات حصرياً مع الاشتراك السنوي بـ 99 ريال — 5 ملصقات مفرغة تكفي 6 أشهر تشحن لباب بيتك. كما توفر 9 ريال
+                <br/>مقارنة بالاشتراك الشهري (108 ريال/سنة مقابل 99 ريال)
+              </p>
+            </div>
+            
+            <div className="mt-6 text-center">
+              <Link href="/checkout?plan=pro_yearly&billing=yearly" className="inline-block px-8 py-3 rounded-xl bg-[#B45309] hover:bg-[#92400e] text-white font-black shadow-lg shadow-amber-900/20 transition-all hover:-translate-y-1">
+                اشترك الآن بـ 99 ريال سنوياً
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -288,78 +502,125 @@ export default function Pricing() {
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="pb-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-secondary/10 border border-secondary/20 text-secondary font-black text-lg flex items-center justify-center">٢</span>
-            ثانياً: خطة العائلة
-          </h2>
-          <p className="text-muted-foreground mb-6 text-sm">تابع جميع سيارات عائلتك من مكان واحد، مع نظام السائق الذكي الذي يتعلم نمط القيادة بعد كل تغيير زيت.</p>
-
-          {/* Roles */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {[
-              { role: "ولي الأمر", emoji: "👑", access: "يرى جميع السيارات + يتابع السائق", note: "يُبلَّغ ببيانات نموذج السائق بعد التغيير" },
-              { role: "السائق", emoji: "🚗", access: "يرى سيارته فقط", note: "لا يرى بيانات باقي السيارات" },
-            ].map(r => (
-              <div key={r.role} className="rounded-xl bg-card border border-border/50 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xl">{r.emoji}</span>
-                  <span className="font-bold text-white text-sm">{r.role}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-1">{r.access}</p>
-                <p className="text-xs text-slate-500">{r.note}</p>
-              </div>
-            ))}
+          <div className="mb-8">
+            <h2 className="text-2xl font-black text-foreground mb-2 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">2</span>
+              خطط العائلة
+            </h2>
+            <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mb-4"></div>
+            <p className="text-muted-foreground font-medium">تابع جميع سيارات عائلتك من مكان واحد، مع نظام يُلزم السائق بتعبئة نموذج بعد كل تغيير زيت.</p>
           </div>
 
-          {/* Alert System */}
-          <div className="rounded-2xl bg-card border border-border/50 p-5 mb-6">
-            <h3 className="font-black text-white mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs flex items-center justify-center font-black">🔔</span>
-              آلية الإلزام والتنبيه
-            </h3>
-            <div className="space-y-2">
-              {alertRows.map(row => (
-                <div key={row.step} className="flex items-center gap-3 rounded-xl bg-background/50 border border-border/30 px-4 py-2.5">
-                  <span className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-black flex items-center justify-center shrink-0">{row.step}</span>
-                  <p className="text-sm text-slate-300 flex-1">{row.text}</p>
-                  <span className="text-lg">{row.icon}</span>
-                  <span className="text-[10px] text-slate-500 shrink-0">{row.who}</span>
-                </div>
-              ))}
+          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
+            {/* Family Pricing Table */}
+            <table className="w-full text-sm mb-12 min-w-[600px] border-collapse">
+              <thead>
+                <tr>
+                  <th className="bg-transparent border-none w-[20%] p-4 text-right"></th>
+                  <th className="bg-primary text-white p-4 border-b border-border w-[20%] font-bold text-center rounded-tr-2xl">صغيرة شهري</th>
+                  <th className="bg-secondary text-white p-4 border-b border-border w-[20%] font-bold text-center">صغيرة سنوي</th>
+                  <th className="bg-teal-600 text-white p-4 border-b border-border w-[20%] font-bold text-center">كبيرة شهري</th>
+                  <th className="bg-indigo-600 text-white p-4 border-b border-border w-[20%] font-bold text-center rounded-tl-2xl">كبيرة سنوي</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">عدد السيارات</td>
+                  <td className="p-4 border-b border-border/50 text-center font-bold text-foreground">3 سيارات</td>
+                  <td className="p-4 border-b border-border/50 text-center font-bold text-foreground">3 سيارات</td>
+                  <td className="p-4 border-b border-border/50 text-center font-bold text-foreground">5 سيارات</td>
+                  <td className="p-4 border-b border-border/50 text-center font-bold text-foreground">5 سيارات</td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">السعر</td>
+                  <td className="p-4 text-primary font-bold border-b border-border/50 text-center">19 ريال/شهر</td>
+                  <td className="p-4 text-secondary font-bold border-b border-border/50 text-center">199 ريال/سنة</td>
+                  <td className="p-4 text-teal-600 font-bold border-b border-border/50 text-center">29 ريال/شهر</td>
+                  <td className="p-4 text-indigo-600 font-bold border-b border-border/50 text-center">299 ريال/سنة</td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50">ما تدفعه سنوياً</td>
+                  <td className="p-4 text-muted-foreground border-b border-border/50 text-center font-medium">228 ريال</td>
+                  <td className="p-4 text-emerald-500 font-black border-b border-border/50 text-center bg-emerald-500/5">✨ 199 ريال</td>
+                  <td className="p-4 text-muted-foreground border-b border-border/50 text-center font-medium">348 ريال</td>
+                  <td className="p-4 text-emerald-500 font-black border-b border-border/50 text-center bg-emerald-500/5">✨ 299 ريال</td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-right font-bold text-foreground border-b border-border/50 rounded-b-2xl">الملصقات</td>
+                  <td className="p-4 text-muted-foreground border-b border-border/50 text-center rounded-br-2xl">—</td>
+                  <td className="p-4 text-amber-500 font-black border-b border-border/50 text-center bg-amber-500/5">10 ملصقات 🏷️</td>
+                  <td className="p-4 text-muted-foreground border-b border-border/50 text-center">—</td>
+                  <td className="p-4 text-purple-500 font-black border-b border-border/50 text-center bg-purple-500/5 rounded-bl-2xl">15 ملصق 🏷️</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Roles Table */}
+            <h3 className="text-xl font-bold text-foreground mb-6">الأدوار في خطة العائلة</h3>
+            <div className="rounded-2xl border border-border overflow-hidden mb-12">
+              <table className="w-full text-sm min-w-[600px] border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[25%] font-bold text-right">الدور</th>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[50%] font-bold text-right">الصلاحيات</th>
+                    <th className="bg-muted text-foreground p-4 border-b border-border w-[25%] font-bold text-right">ملاحظة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-right font-bold text-primary">ولي الأمر 👑</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground font-medium group-hover:text-foreground">يرى جميع السيارات — يضيف سائقين — يتابع النماذج — يستقبل تنبيهات التأخر</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground/70 font-medium">متابع فقط — لا يعبئ النماذج</td>
+                  </tr>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 text-right font-bold text-emerald-600">السائق 🚗</td>
+                    <td className="p-4 text-right text-muted-foreground font-medium group-hover:text-foreground">يرى سيارته فقط — ملزم بتعبئة نموذج بعد تغيير الزيت — يستقبل تذكيرات</td>
+                    <td className="p-4 text-right text-muted-foreground/70 font-medium">لا يرى بيانات باقي السيارات</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
 
-          {/* Family Plan Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {familyPlans.map((plan) => (
-              <motion.div
-                key={plan.id}
-                whileHover={{ y: -3 }}
-                className={cn(
-                  "relative rounded-2xl border p-4 flex flex-col gap-3",
-                  plan.highlight ? "bg-gradient-to-b from-primary/10 to-primary/5 border-primary/30 shadow-lg" : "bg-card border-border/50"
-                )}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-black">{plan.badge}</div>
-                )}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{plan.name}</p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-white">{plan.monthlyPrice ?? plan.yearlyPrice}</span>
-                    <span className="text-xs text-muted-foreground">ريال/{plan.monthlyPrice ? "شهري" : "سنوي"}</span>
-                  </div>
-                </div>
-                <div className="space-y-1 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1.5"><span>🚗</span> {plan.cars} سيارة</div>
-                  {plan.points && <div className="flex items-center gap-1.5"><span>⭐</span> {plan.points} نقطة</div>}
-                  {plan.offers && <div className="flex items-center gap-1.5"><span>🎁</span> {plan.offers} عروض</div>}
-                </div>
-                <Link href="/register" className={cn("block text-center py-2 rounded-xl text-xs font-bold transition-all", plan.highlight ? "bg-primary text-white" : "bg-white/5 text-muted-foreground hover:bg-white/10")}>
-                  اشترك الآن
-                </Link>
-              </motion.div>
-            ))}
+            {/* Alerts Table */}
+            <h3 className="text-xl font-bold text-foreground mb-6">آلية الإلزام والتنبيه</h3>
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-sm mb-4 min-w-[600px] border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[10%] font-bold text-center">#</th>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[60%] font-bold text-right">الخطوة</th>
+                    <th className="bg-muted text-foreground p-4 border-b border-border w-[30%] font-bold text-center">المسؤول</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-center text-muted-foreground font-bold">1</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground font-medium">النظام يحسب موعد تغيير الزيت القادم تلقائياً</td>
+                    <td className="p-4 border-b border-border/50 text-center font-bold text-indigo-500">تلقائي 🤖</td>
+                  </tr>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-center text-muted-foreground font-bold">2</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground font-medium">تذكير للسائق قبل 7 أيام من الموعد</td>
+                    <td className="p-4 border-b border-border/50 text-center font-bold text-indigo-500">تلقائي 🤖</td>
+                  </tr>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-center text-muted-foreground font-bold">3</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground font-medium">السائق يغير الزيت ويعبئ النموذج</td>
+                    <td className="p-4 border-b border-border/50 text-center font-bold text-emerald-600">السائق 🚗</td>
+                  </tr>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-center text-muted-foreground font-bold">4</td>
+                    <td className="p-4 border-b border-border/50 text-right text-muted-foreground font-medium">ولي الأمر يستقبل إشعار "تم التغيير"</td>
+                    <td className="p-4 border-b border-border/50 text-center font-bold text-secondary">ولي الأمر 👑</td>
+                  </tr>
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 text-center text-muted-foreground font-bold">5</td>
+                    <td className="p-4 text-right text-muted-foreground font-medium">إذا لم يُعبأ النموذج خلال 48 ساعة — تنبيه تصعيدي لولي الأمر</td>
+                    <td className="p-4 text-center font-bold text-destructive">تلقائي ⚠️</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
@@ -369,80 +630,153 @@ export default function Pricing() {
       {/* ═══════════════════════════════════════════════════════ */}
       <section className="pb-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-white/5 border border-border text-white font-black text-lg flex items-center justify-center">٣</span>
-            ثالثاً: مقارنة شاملة لجميع الخطط
-          </h2>
-
-          {/* Scrollable table */}
-          <div className="rounded-2xl border border-border/50 overflow-hidden overflow-x-auto">
-            <table className="w-full text-sm min-w-[700px]">
-              <thead>
-                <tr className="bg-card border-b border-border/50">
-                  <th className="text-right px-4 py-3 text-muted-foreground font-semibold w-44">الميزة</th>
-                  {planHeaders.map((h, i) => (
-                    <th key={i} className={cn("px-3 py-3 text-center font-black text-xs", i === 2 ? "text-secondary" : i >= 3 ? "text-primary" : "text-white")}>
-                      {h}
-                      <div className={cn("text-[10px] font-normal mt-0.5", "text-muted-foreground")}>{planPrices[i]}</div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {featureSections.map((section, si) => (
-                  <React.Fragment key={`section-${si}`}>
-                    <tr className="bg-white/2 border-t border-border/30">
-                      <td colSpan={7} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">{section.title}</td>
-                    </tr>
-                    {section.features.map((feature, fi) => (
-                      <tr key={`feature-${si}-${fi}`} className="border-t border-border/20 hover:bg-white/2 transition-colors">
-                        <td className="px-4 py-2.5 text-sm text-slate-300">{feature.label}</td>
-                        {feature.values.map((val, vi) => (
-                          <td key={vi} className="px-3 py-2.5 text-center">
-                            <FeatureCell value={val} />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-                {/* Price row */}
-                <tr className="border-t-2 border-border/50 bg-card">
-                  <td className="px-4 py-3 font-bold text-white text-sm">السعر الشهري</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-emerald-400">مجاني</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-white">108 ريال</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-secondary">99 ريال</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-primary">199 ريال</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-primary">228 ريال</td>
-                  <td className="px-3 py-3 text-center text-xs font-bold text-primary">299 ريال</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="mb-8 max-w-5xl mx-auto text-center">
+            <h2 className="text-2xl font-black text-foreground mb-4">ثالثاً: مقارنة شاملة لجميع الخطط</h2>
+            <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mx-auto"></div>
           </div>
 
-          {/* Best Value Callouts */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <div className="rounded-2xl bg-gradient-to-l from-secondary/10 to-secondary/5 border border-secondary/20 p-5">
-              <p className="text-sm font-bold text-secondary mb-1">الأفضل قيمة للفرد 🌟</p>
-              <p className="text-xs text-slate-400">الاشتراك السنوي بـ 99 ريال = 9 ريال شهرياً وتحصل على 5 خدمات مجانية + 108 أيام تجريبية</p>
+          {/* Comprehensive Comparison Table */}
+          <div className="w-full overflow-x-auto glass-card p-6 rounded-[2rem]">
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <table className="w-full text-sm min-w-[800px] border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[22%] font-bold text-right">الميزة</th>
+                    <th className="bg-muted text-foreground p-4 border-b border-border border-l w-[13%] font-bold text-center">مجاني</th>
+                    <th className="bg-primary/5 text-primary p-4 border-b border-border border-l w-[13%] font-bold text-center">شهري 9</th>
+                    <th className="bg-secondary/5 text-secondary p-4 border-b border-border border-l w-[13%] font-bold text-center">سنوي 99</th>
+                    <th className="bg-teal-500/5 text-teal-600 p-4 border-b border-border border-l w-[13%] font-bold text-center">عائلة س شهري</th>
+                    <th className="bg-emerald-500/5 text-emerald-600 p-4 border-b border-border border-l w-[13%] font-bold text-center">عائلة س سنوي</th>
+                    <th className="bg-indigo-500/5 text-indigo-600 p-4 border-b border-border w-[13%] font-bold text-center">عائلة ك سنوي</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Row 1 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-foreground font-medium text-right bg-muted/20">عدد السيارات</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-foreground">1</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-primary bg-primary/5">1</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-secondary bg-secondary/5">1</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-teal-600">3</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-emerald-600">3</td>
+                    <td className="p-4 text-center border-b border-border/50 font-bold text-indigo-600">5</td>
+                  </tr>
+                  {/* Row 2 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">تذكيرات الصيانة</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 3 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">ناقل الحركة + فترة التغيير</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 4 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">تذكير رخصة/تأمين/فحص</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 5 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">تنبيه SMS والبريد</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 6 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">رفع الفواتير</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 7 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">نظام السائق وولي الأمر</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                    <td className={getCellClass(true)}>{getIcon(true)}</td>
+                  </tr>
+                  {/* Row 8 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-muted-foreground font-medium text-right group-hover:text-foreground">الملصقات المرفقة</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className="bg-amber-500/10 text-amber-600 font-bold text-center border-b border-border/50 py-4">5 🏷️</td>
+                    <td className={getCellClass(false)}>{getIcon(false)}</td>
+                    <td className="bg-amber-500/10 text-amber-600 font-bold text-center border-b border-border/50 py-4">10 🏷️</td>
+                    <td className="bg-purple-500/10 text-purple-600 font-bold text-center border-b border-border/50 py-4">15 🏷️</td>
+                  </tr>
+                  {/* Row 9 */}
+                  <tr className="hover:bg-muted/5 transition-colors">
+                    <td className="p-4 border-b border-border/50 text-foreground font-bold text-right bg-muted/20">السعر السنوي</td>
+                    <td className="bg-emerald-500/10 text-emerald-600 font-bold text-center border-b border-border/50 py-4">مجاني</td>
+                    <td className="bg-primary/5 text-primary font-bold text-center border-b border-border/50 py-4">108 ريال</td>
+                    <td className="bg-secondary/5 text-secondary font-bold text-center border-b border-border/50 py-4">99 ريال</td>
+                    <td className="bg-teal-500/5 text-teal-600 font-bold text-center border-b border-border/50 py-4">228 ريال</td>
+                    <td className="bg-emerald-500/5 text-emerald-600 font-bold text-center border-b border-border/50 py-4">199 ريال</td>
+                    <td className="bg-indigo-500/5 text-indigo-600 font-bold text-center border-b border-border/50 py-4">299 ريال</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="rounded-2xl bg-gradient-to-l from-primary/10 to-primary/5 border border-primary/20 p-5">
-              <p className="text-sm font-bold text-primary mb-1">الأفضل قيمة للعائلة 👨‍👩‍👧‍👦</p>
-              <p className="text-xs text-slate-400">الخطة السنوية من 29+ ريال = 199 ريال وتشمل خدمات لكل سيارة في العائلة</p>
+            
+            {/* Box Highlight Callouts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              {/* Family Box */}
+              <div className="bg-gradient-to-l from-indigo-500/10 to-transparent border border-indigo-500/20 p-6 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-right w-full">
+                  <h4 className="font-bold text-indigo-600 text-lg mb-2">الأفضل قيمة للعائلة 👨‍👩‍👧‍👦</h4>
+                  <p className="text-muted-foreground text-sm font-medium">الخطة السنوية توفر 29+ ريال وتشمل ملصقات لكل سيارة في العائلة</p>
+                </div>
+              </div>
+              {/* Individual Box */}
+              <div className="bg-gradient-to-l from-primary/10 to-transparent border border-primary/20 p-6 rounded-2xl flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-right w-full">
+                  <h4 className="font-bold text-primary text-lg mb-2">الأفضل قيمة للفرد 💡</h4>
+                  <p className="text-muted-foreground text-sm font-medium">الاشتراك السنوي بـ 99 ريال — توفر 9 ريال وتحصل على 5 ملصقات مجاناً</p>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* Footer CTA */}
-      <section className="pb-16 px-4 text-center border-t border-border/30 pt-12">
-        <p className="text-muted-foreground text-sm mb-1">صيانة سيارتي — CarMaint Pro</p>
-        <p className="text-muted-foreground text-xs">www.carmaint.sa · {new Date().getFullYear()}</p>
-        <div className="flex justify-center gap-3 mt-6">
-          <Link href="/register" className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all">
-            <ArrowLeft className="w-4 h-4" /> ابدأ مجاناً الآن
+      <section className="pb-16 px-4 text-center border-t border-border/50 pt-16 mt-8 relative">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+        <p className="text-foreground font-bold text-lg mb-2">مداري — Mdari</p>
+        <p className="text-muted-foreground text-sm">www.mdari.sa · {new Date().getFullYear()}</p>
+        <div className="flex justify-center gap-4 mt-8">
+          <Link href="/register" className="flex items-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1 transition-all">
+            <ArrowLeft className="w-5 h-5" /> ابدأ مجاناً الآن
           </Link>
-          <Link href="/" className="flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-white hover:border-border/80 font-medium transition-all">
+          <Link href="/" className="flex items-center gap-2 px-8 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-border/80 font-medium transition-all bg-white hover:bg-muted/20 shadow-sm">
             الرئيسية
           </Link>
         </div>

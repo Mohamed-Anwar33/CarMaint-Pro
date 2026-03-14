@@ -22,6 +22,11 @@ import Dashboard from "@/pages/Dashboard";
 import Admin from "@/pages/Admin";
 import Settings from "@/pages/Settings";
 import ForgotPassword from "@/pages/ForgotPassword";
+import Offers from "@/pages/Offers";
+import Tips from "@/pages/Tips";
+import Checkout from "@/pages/Checkout";
+import PaymentCallback from "@/pages/PaymentCallback";
+import Invoices from "@/pages/Invoices";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -79,6 +84,17 @@ function Router() {
           </Route>
           <Route path="/admin">
             {() => <ProtectedRoute component={Admin} adminOnly={true} />}
+          </Route>
+          <Route path="/offers" component={Offers} />
+          <Route path="/tips" component={Tips} />
+          <Route path="/checkout">
+            {() => <ProtectedRoute component={Checkout} />}
+          </Route>
+          <Route path="/payment/callback">
+            {() => <ProtectedRoute component={PaymentCallback} />}
+          </Route>
+          <Route path="/invoices">
+            {() => <ProtectedRoute component={Invoices} />}
           </Route>
           <Route component={NotFound} />
         </Switch>

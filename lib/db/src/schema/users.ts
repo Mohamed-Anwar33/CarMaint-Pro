@@ -13,6 +13,7 @@ export const usersTable = pgTable("users", {
   role: userRoleEnum("role").notNull().default("manager"),
   plan: userPlanEnum("plan").notNull().default("free"),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  accountType: text("account_type").default("individual"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

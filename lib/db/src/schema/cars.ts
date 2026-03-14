@@ -34,6 +34,9 @@ export const carsTable = pgTable("cars", {
   lastReportDate: timestamp("last_report_date"),
   driverName: text("driver_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  invoices: text("invoices").array().default([]),
+  batteryInvoice: text("battery_invoice"),
+  tireInvoice: text("tire_invoice"),
 });
 
 export const insertCarSchema = createInsertSchema(carsTable).omit({ createdAt: true });

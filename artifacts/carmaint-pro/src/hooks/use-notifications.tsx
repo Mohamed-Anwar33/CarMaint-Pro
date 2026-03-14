@@ -97,8 +97,8 @@ export function useNotifications(): UseNotificationsReturn {
     if (Notification.permission === "granted") {
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.ready.then((reg) => {
-          reg.showNotification("صيانة سيارتي 🔔", {
-            body: "التنبيهات تعمل بنجاح! ستصلك تذكيرات صيانة سيارتك تلقائياً.",
+          reg.showNotification("مداري 🔔", {
+            body: "التنبيهات تعمل بنجاح! ستصلك تذكيرات وثائق مركبتك تلقائياً.",
             icon: "/icons/icon-192.png",
             dir: "rtl",
           } as NotificationOptions);

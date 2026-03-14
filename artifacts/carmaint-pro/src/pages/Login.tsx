@@ -46,53 +46,63 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-16" dir="rtl">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="bg-card border border-border/50 rounded-3xl p-8 shadow-2xl shadow-black/40 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10">
-            <div className="flex justify-center mb-6">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background" dir="rtl">
+      {/* Background Decor */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[100px] pointer-events-none" />
+      
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
+        <div className="glass-card rounded-[2.5rem] p-8 sm:p-10">
+          <div className="flex justify-center mb-8">
+            <div className="p-3 bg-white rounded-2xl shadow-sm border border-border">
               <CarMaintLogo size="md" animated />
             </div>
-            <h1 className="text-2xl font-black text-white text-center mb-1">أهلاً بعودتك!</h1>
-            <p className="text-sm text-muted-foreground text-center mb-8">سجل دخولك للوصول إلى لوحة القيادة</p>
+          </div>
+          
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-black text-foreground mb-2 tracking-tight">مرحباً بك مجدداً 👋</h1>
+            <p className="text-muted-foreground font-medium">سجل دخولك لمتابعة مركباتك</p>
+          </div>
 
-            {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-5">
-                <AlertCircle className="w-4 h-4 shrink-0" /><span>{error}</span>
-              </motion.div>
-            )}
+          {error && (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm mb-6 font-bold">
+              <AlertCircle className="w-5 h-5 shrink-0" /><span>{error}</span>
+            </motion.div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="example@email.com" required dir="ltr" autoComplete="email"
-                  className="w-full px-4 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary/30 text-white placeholder:text-slate-500 transition-all outline-none" />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-bold text-foreground mb-2">البريد الإلكتروني</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="example@email.com" required dir="ltr" autoComplete="email"
+                className="w-full px-5 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-bold text-foreground">كلمة المرور</label>
+                <Link href="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-bold transition-colors">نسيت كلمة المرور؟</Link>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                <div className="relative">
-                  <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••" required minLength={6} dir="ltr" autoComplete="current-password"
-                    className="w-full px-4 pr-4 pl-12 py-3 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary/30 text-white placeholder:text-slate-500 transition-all outline-none" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors flex items-center justify-center p-1 rounded-md">
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
+              <div className="relative">
+                <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••" required minLength={6} dir="ltr" autoComplete="current-password"
+                  className="w-full px-5 pr-5 pl-12 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors flex items-center justify-center p-1">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-              <div className="flex justify-end">
-                <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">نسيت كلمة المرور؟</Link>
-              </div>
-              <button type="submit" disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
-                {submitting ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><LogIn className="w-4 h-4" /> تسجيل الدخول</>}
-              </button>
-            </form>
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              ليس لديك حساب؟{" "}<Link href="/register" className="text-primary font-semibold hover:underline">سجل الآن</Link>
+            </div>
+            
+            <button type="submit" disabled={submitting}
+              className="w-full mt-2 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-primary text-white font-bold text-base shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+              {submitting ? <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" /> : <><LogIn className="w-5 h-5" /> دخول مساحة العمل</>}
+            </button>
+          </form>
+          
+          <div className="mt-8 text-center bg-muted/50 p-4 rounded-2xl border border-border/50">
+            <p className="text-sm text-muted-foreground font-medium">
+              عضو جديد؟{" "}<Link href="/register" className="text-primary font-black hover:underline">أنشئ حسابك الآن</Link>
             </p>
           </div>
         </div>

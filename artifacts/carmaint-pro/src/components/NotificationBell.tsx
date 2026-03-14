@@ -68,9 +68,9 @@ export function NotificationBell() {
             className="fixed bottom-20 left-4 right-4 z-[99] max-w-sm mx-auto"
             dir="rtl"
           >
-            <div className="bg-slate-800 border border-primary/30 rounded-2xl p-4 shadow-2xl relative overflow-hidden">
+            <div className="bg-card border border-border border border-primary/30 rounded-2xl p-4 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary" />
-              <button onClick={() => setShowSetup(false)} className="absolute top-3 left-3 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setShowSetup(false)} className="absolute top-3 left-3 w-6 h-6 rounded-full bg-black/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <X className="w-3 h-3" />
               </button>
               <div className="flex items-start gap-3">
@@ -78,8 +78,8 @@ export function NotificationBell() {
                   <BellRing className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-white text-sm mb-0.5">فعّل تنبيهات الصيانة 🔔</p>
-                  <p className="text-xs text-slate-400 mb-3">سنذكّرك بمواعيد زيت سيارتك وتجديد وثائقها تلقائياً — لا تفوّت موعداً</p>
+                  <p className="font-bold text-foreground text-sm mb-0.5">فعّل تنبيهات الصيانة 🔔</p>
+                  <p className="text-xs text-muted-foreground mb-3">سنذكّرك بمواعيد زيت سيارتك وتجديد وثائقها تلقائياً — لا تفوّت موعداً</p>
                   <button onClick={handleEnable} disabled={requesting}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-md shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-60">
                     {requesting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Bell className="w-4 h-4" /> تفعيل التنبيهات</>}
@@ -121,7 +121,7 @@ export function NotificationBell() {
                 <div className="p-3 border-b border-border/50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-primary" />
-                    <h3 className="font-bold text-sm text-white">التنبيهات</h3>
+                    <h3 className="font-bold text-sm text-foreground">التنبيهات</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
@@ -146,7 +146,7 @@ export function NotificationBell() {
                       <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
                       <p className="text-sm text-muted-foreground">لا توجد تنبيهات بعد</p>
                       {status === "subscribed" && (
-                        <p className="text-xs text-slate-500 mt-1">ستصلك تذكيرات الصيانة تلقائياً</p>
+                        <p className="text-xs text-muted-foreground mt-1">ستصلك تذكيرات الصيانة تلقائياً</p>
                       )}
                     </div>
                   ) : (
@@ -155,9 +155,9 @@ export function NotificationBell() {
                         <div className="flex items-start gap-2">
                           <span className="text-base mt-0.5">{getIcon(n.type)}</span>
                           <div className="flex-1 min-w-0">
-                            <p className={cn("text-xs font-semibold", !n.read ? "text-white" : "text-slate-300")}>{n.title}</p>
+                            <p className={cn("text-xs font-semibold", !n.read ? "text-foreground" : "text-foreground")}>{n.title}</p>
                             <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{n.body}</p>
-                            <p className="text-[9px] text-slate-500 mt-1">{n.timestamp.toLocaleTimeString("ar-SA")}</p>
+                            <p className="text-[9px] text-muted-foreground mt-1">{n.timestamp.toLocaleTimeString("ar-SA")}</p>
                           </div>
                           {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />}
                         </div>
@@ -170,7 +170,7 @@ export function NotificationBell() {
                   <div className="p-3 border-t border-border/50 bg-primary/5">
                     <div className="flex items-center gap-2">
                       <Smartphone className="w-4 h-4 text-primary shrink-0" />
-                      <p className="text-[10px] text-slate-400">فعّل التنبيهات للحصول على تذكيرات صيانة السيارة مباشرةً على جهازك</p>
+                      <p className="text-[10px] text-muted-foreground">فعّل التنبيهات للحصول على تذكيرات صيانة السيارة مباشرةً على جهازك</p>
                     </div>
                   </div>
                 )}
