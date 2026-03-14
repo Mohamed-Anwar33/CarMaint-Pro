@@ -80,9 +80,10 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       onboardingCompleted: newUser.onboarding_completed,
       createdAt: newUser.created_at,
     };
-  } catch (err) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("fetchProfile error (check Netlify environment variables or clear cache):", err);
-    return null;
+    throw new Error(`PROFILE_ERROR: ${errorMsg}`);
   }
 }
 
@@ -92,30 +93,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        setSupabaseUser(session.user);
-        const profile = await fetchProfile(session.user.id, session.user.email || "");
-        setUser(profile);
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+          setSupabaseUser(session.user);
+          const profile = await fetchProfile(session.user.id, session.user.email || "");
+          if (mounted) setUser(profile);
+        }
+      } catch (e) {
+        console.error("Auth init error:", e);
+      } finally {
+        if (mounted) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        setSupabaseUser(session.user);
+        if (mounted) setSupabaseUser(session.user);
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           const profile = await fetchProfile(session.user.id, session.user.email || "");
-          setUser(profile);
+          if (mounted) setUser(profile);
         }
       } else {
-        setSupabaseUser(null);
-        setUser(null);
+        if (mounted) {
+          setSupabaseUser(null);
+          setUser(null);
+        }
       }
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -127,11 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.session?.user) {
         setSupabaseUser(data.session.user);
         const profile = await fetchProfile(data.session.user.id, data.session.user.email || "");
-        if (!profile) {
-          throw new Error("DATA_FETCH_ERROR");
-        }
+        // Note: fetchProfile will throw its own PROFILE_ERROR if it fails now
         setUser(profile);
       }
+    } catch (err) {
+      // Re-throw so the Login component can catch it and hide its own spinner
+      throw err;
     } finally {
       setIsLoading(false);
     }
