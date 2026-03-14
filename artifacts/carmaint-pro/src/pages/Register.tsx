@@ -35,8 +35,8 @@ export default function Register() {
     setSubmitting(true);
     try {
       await register(name, email, password, role);
-      setSuccess("تم إنشاء حسابك! تحقق من بريدك الإلكتروني لتأكيد الحساب.");
-      setTimeout(() => setLocation("/login"), 3000);
+      setSuccess("تم إنشاء حسابك بنجاح! يتم تحويلك لتسجيل الدخول...");
+      setTimeout(() => setLocation("/login"), 1500);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("already registered") || msg.includes("already been registered")) {
