@@ -24,6 +24,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string, role?: UserRole, accountType?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<AppUser>) => Promise<void>;
+  updatePhone: (newPhone: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -33,8 +34,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * Fetches the user profile from Supabase directly instead of an API server.
  * This syncs the Supabase user to our local PostgreSQL DB on first login.
  */
-async function fetchProfile(userId: string, email: string): Promise<AppUser | null> {
+async function fetchProfile(supaUser: SupabaseUser): Promise<AppUser | null> {
   try {
+    const userId = supaUser.id;
+    const email = supaUser.email || "";
+    const meta = supaUser.user_metadata || {};
+
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
@@ -65,10 +70,10 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       .insert({
         id: userId,
         email: email,
-        name: null,
-        role: "manager",
+        name: meta.name || null,
+        role: meta.role || "manager",
         plan: "free",
-        account_type: "individual",
+        account_type: meta.account_type || "individual",
         onboarding_completed: false,
       })
       .select()
@@ -80,10 +85,10 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
       return {
         id: userId,
         email: email,
-        name: null,
-        role: "manager" as UserRole,
+        name: meta.name || null,
+        role: (meta.role as UserRole) || "manager",
         plan: "free" as UserPlan,
-        accountType: "individual",
+        accountType: meta.account_type || "individual",
         onboardingCompleted: false,
         createdAt: new Date().toISOString(),
       };
@@ -103,12 +108,12 @@ async function fetchProfile(userId: string, email: string): Promise<AppUser | nu
     console.error("fetchProfile error:", err);
     // Return a minimal fallback user instead of throwing
     return {
-      id: userId,
-      email: email,
-      name: null,
-      role: "manager" as UserRole,
+      id: supaUser.id,
+      email: supaUser.email || "",
+      name: supaUser.user_metadata?.name || null,
+      role: (supaUser.user_metadata?.role as UserRole) || "manager",
       plan: "free" as UserPlan,
-      accountType: "individual",
+      accountType: supaUser.user_metadata?.account_type || "individual",
       onboardingCompleted: false,
       createdAt: new Date().toISOString(),
     };
@@ -128,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user && mounted) {
           setSupabaseUser(session.user);
-          const profile = await fetchProfile(session.user.id, session.user.email || "");
+          const profile = await fetchProfile(session.user);
           if (mounted) setUser(profile);
         }
       } catch (e) {
@@ -145,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           if (mounted) setSupabaseUser(session.user);
           if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-            const profile = await fetchProfile(session.user.id, session.user.email || "");
+            const profile = await fetchProfile(session.user);
             if (mounted) setUser(profile);
           }
         } else {
@@ -167,17 +172,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const processInvitations = async (userId: string, email: string, name: string) => {
+    try {
+      const { data: invites, error: fetchErr } = await supabase
+        .from("invitations")
+        .select("*")
+        .eq("driver_email", email)
+        .eq("status", "pending");
+        
+      if (fetchErr) throw fetchErr;
+      if (!invites || invites.length === 0) return;
+
+      for (const invite of invites) {
+        const { error: updateCarErr } = await supabase
+          .from("cars")
+          .update({
+            driver_id: userId,
+            driver_name: name
+          })
+          .eq("id", invite.car_id);
+          
+        if (!updateCarErr) {
+          await supabase.from("invitations").delete().eq("id", invite.id);
+        }
+      }
+    } catch (err) {
+      console.error("Error processing invitations:", err);
+    }
+  };
+
+  const login = async (phoneOrEmail: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const emailToUse = phoneOrEmail.includes("@") ? phoneOrEmail : `${phoneOrEmail}@mdari.local`;
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailToUse, password });
       if (error) throw new Error(error.message);
       
       if (data.session?.user) {
         setSupabaseUser(data.session.user);
-        const profile = await fetchProfile(data.session.user.id, data.session.user.email || "");
+        const profile = await fetchProfile(data.session.user);
         if (profile) {
           setUser(profile);
+          // Process any pending invitations the user might have
+          await processInvitations(data.session.user.id, data.session.user.email || "", profile.name || "سائق");
         }
       }
     } catch (err) {
@@ -187,11 +224,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: UserRole = "manager", accountType: string = "individual") => {
+  const register = async (name: string, phoneOrEmail: string, password: string, role: UserRole = "manager", accountType: string = "individual") => {
     setIsLoading(true);
     try {
+      const emailToUse = phoneOrEmail.includes("@") ? phoneOrEmail : `${phoneOrEmail}@mdari.local`;
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: emailToUse,
         password,
         options: { data: { name, role, account_type: accountType } },
       });
@@ -201,7 +239,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Explicitly create profile here since frontend handles logic
       const { error: insertErr } = await supabase.from("users").insert({
         id: data.user.id,
-        email: email,
+        email: emailToUse,
         name: name,
         role: role,
         plan: "free",
@@ -210,6 +248,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (insertErr) {
         console.error("Failed to create user profile row:", insertErr);
+      } else {
+        // Process any pending invitations for the new user
+        await processInvitations(data.user.id, emailToUse, name);
       }
     } finally {
       setIsLoading(false);
@@ -224,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (!supabaseUser) return;
-    const profile = await fetchProfile(supabaseUser.id, supabaseUser.email || "");
+    const profile = await fetchProfile(supabaseUser);
     setUser(profile);
   };
 
@@ -245,8 +286,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updatePhone = async (newPhone: string) => {
+    if (!user || !supabaseUser) return;
+    try {
+      const emailToUse = newPhone.includes("@") ? newPhone : `${newPhone}@mdari.local`;
+      
+      const { error: authError } = await supabase.auth.updateUser({ email: emailToUse });
+      if (authError) throw authError;
+
+      const { error: dbError } = await supabase.from("users").update({
+        email: emailToUse
+      }).eq("id", supabaseUser.id);
+      
+      if (dbError) throw dbError;
+      
+      setUser(prev => prev ? { ...prev, email: emailToUse } : null);
+    } catch (err: unknown) {
+      throw new Error(err instanceof Error ? err.message : "فشل في تحديث رقم الجوال");
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, supabaseUser, isLoading, login, register, logout, updateUser, refreshUser }}>
+    <AuthContext.Provider value={{ user, supabaseUser, isLoading, login, register, logout, updateUser, updatePhone, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
