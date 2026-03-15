@@ -71,6 +71,8 @@ export type Database = {
           battery_invoice: string | null;
           tire_invoice: string | null;
           last_report_date: string | null;
+          brakes_install_date: string | null;
+          next_air_filter_mileage: number | null;
           created_at: string;
         };
       };

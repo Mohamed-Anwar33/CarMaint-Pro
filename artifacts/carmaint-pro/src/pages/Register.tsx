@@ -11,7 +11,7 @@ export default function Register() {
   const { register, user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>("manager");
@@ -36,13 +36,13 @@ export default function Register() {
     if (password.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
     setSubmitting(true);
     try {
-      await register(name, email, password, role, accountType);
+      await register(name, phone, password, role, accountType);
       setSuccess("تم إنشاء حسابك بنجاح! يتم تحويلك لتسجيل الدخول...");
       setTimeout(() => setLocation("/login"), 1500);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("already registered") || msg.includes("already been registered")) {
-        setError("هذا البريد مسجل بالفعل. حاول تسجيل الدخول.");
+        setError("هذا الرقم/البريد مسجل بالفعل. حاول تسجيل الدخول.");
       } else if (msg.includes("Unexpected token") || msg.includes("SyntaxError") || msg.includes("fetch")) {
         setError("خطأ في الاتصال بقاعدة البيانات. تأكد من متغيّرات بيئة Netlify واعمل تحديث للصفحة.");
       } else {
@@ -90,8 +90,8 @@ export default function Register() {
                 className="w-full px-5 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-foreground mb-2">البريد الإلكتروني</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" required dir="ltr" autoComplete="email"
+              <label className="block text-sm font-bold text-foreground mb-2">رقم الجوال</label>
+              <input type="text" value={phone} onChange={e => setPhone(e.target.value)} placeholder="05xxxxxxxx" required dir="ltr" autoComplete="tel"
                 className="w-full px-5 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
             </div>
             <div>

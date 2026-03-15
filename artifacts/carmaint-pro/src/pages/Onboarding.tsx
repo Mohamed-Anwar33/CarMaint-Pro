@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Car, ShieldAlert, CalendarClock, ChevronLeft, ChevronRight, CheckCircle2, Lock, Crown, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 type TransmissionType = "automatic" | "manual";
 type EngineOilType = "5000km" | "10000km" | "custom";
@@ -21,6 +22,9 @@ interface CarFormData {
   batteryWarrantyMonths: number | null;
   tireInstallDate: string;
   tireWarrantyMonths: number | null;
+  brakesInstallDate: string;
+  brakesWarrantyMonths: number | null;
+  coolantWarrantyMonths: number | null;
   lastMileage: number | null;
   plateNumber: string;
   notes: string;
@@ -33,6 +37,7 @@ interface CarFormData {
 export default function Onboarding() {
   const { user, refreshUser } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -87,6 +92,9 @@ export default function Onboarding() {
     engineOilCustomKm: null,
     batteryBrand: "",
     tireSize: "",
+    brakesInstallDate: "",
+    brakesWarrantyMonths: 6,
+    coolantWarrantyMonths: 6,
   });
 
   const update = (key: keyof CarFormData, value: string | number | null) => setFormData(prev => ({ ...prev, [key]: value }));
@@ -97,11 +105,31 @@ export default function Onboarding() {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    console.log("[Onboarding] handleSubmit initiated");
+    if (!user) {
+      console.log("[Onboarding] No user found, aborting");
+      return;
+    }
+    
     setIsSubmitting(true);
     setError("");
+    console.log("[Onboarding] isSubmitting set to true, error cleared");
+    
     try {
-      const { error: insertError } = await supabase.from("cars").insert({
+      console.log("[Onboarding] Calculating mileages...");
+      let nextOilChangeMileage: number | null = null;
+      let nextAirFilterMileage: number | null = null;
+      if (formData.lastMileage) {
+        const oilInterval = formData.engineOilType === '5000km' ? 5000 
+          : formData.engineOilType === '10000km' ? 10000 
+          : (formData.engineOilCustomKm || 5000);
+        nextOilChangeMileage = formData.lastMileage + oilInterval;
+        nextAirFilterMileage = formData.lastMileage + 15000;
+      }
+
+      console.log("[Onboarding] Preparing to insert car to Supabase...");
+      
+      const insertPromise = supabase.from("cars").insert({
         owner_id: user.id,
         name: formData.name,
         model_year: formData.modelYear,
@@ -116,7 +144,12 @@ export default function Onboarding() {
         tire_install_date: formData.tireInstallDate || null,
         tire_warranty_months: formData.tireWarrantyMonths || null,
         tire_size: formData.tireSize || null,
+        brakes_install_date: formData.brakesInstallDate || null,
+        brakes_warranty_months: formData.brakesWarrantyMonths || null,
+        coolant_warranty_months: formData.coolantWarrantyMonths || null,
         last_mileage: formData.lastMileage || null,
+        next_oil_change_mileage: nextOilChangeMileage,
+        next_air_filter_mileage: nextAirFilterMileage,
         plate_number: formData.plateNumber || null,
         notes: formData.notes || null,
         engine_oil_custom_days: formData.engineOilType === 'custom' ? formData.engineOilCustomDays : null,
@@ -124,22 +157,53 @@ export default function Onboarding() {
         battery_brand: formData.batteryBrand || null,
       });
 
-      if (insertError) throw insertError;
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("طال وقت الحفظ جداً (Timeout)! يرجى التحقق من اتصال الإنترنت أو صحة البيانات.")), 8000)
+      );
 
-      // Update onboarding status
+      console.log("[Onboarding] Awaiting Supabase insert response...");
+      const insertResponse = await Promise.race([insertPromise, timeoutPromise]) as any;
+      console.log("[Onboarding] Supabase insert responded:", insertResponse);
+
+      const { error: insertError } = insertResponse;
+
+      if (insertError) {
+        console.error("[Onboarding] Supabase Insert Error:", insertError);
+        throw new Error(insertError.message || JSON.stringify(insertError));
+      }
+
+      console.log("[Onboarding] Car inserted successfully. Updating onboarding status...");
+      
       const { error: updateError } = await supabase
         .from("users")
         .update({ onboarding_completed: true })
         .eq("id", user.id);
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("[Onboarding] Supabase Update Error:", updateError);
+        throw new Error(updateError.message || JSON.stringify(updateError));
+      }
 
+      console.log("[Onboarding] User status updated. Refreshing user context...");
       await refreshUser();
+      console.log("[Onboarding] User context refreshed. Navigating to dashboard...");
+      
       setLocation("/dashboard");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "حدث خطأ أثناء الحفظ");
-    } finally {
+    } catch (err: any) {
+      console.error("[Onboarding] Add Car caught error:", err);
+      const msg = err?.message || (typeof err === "string" ? err : JSON.stringify(err));
+      setError(`تعذر الحفظ: ${msg}`);
+      toast({
+        title: "❌ فشل في حفظ السيارة",
+        description: msg,
+        variant: "destructive"
+      });
       setIsSubmitting(false);
+    } finally {
+      if(isSubmitting) {
+         console.log("[Onboarding] Resetting isSubmitting in finally block");
+         setIsSubmitting(false);
+      }
     }
   };
 
@@ -272,8 +336,10 @@ export default function Onboarding() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">تاريخ تعبئة ماء الرديتر (Coolant)</label>
                     <input type="date" value={formData.coolantFillDate} onChange={e => update('coolantFillDate', e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
-                    <p className="text-xs text-muted-foreground">سيتم تذكيرك تلقائياً بعد 6 أشهر من هذا التاريخ لفحص المستوى.</p>
+                      onClick={(e) => { try { (e.target as any).showPicker(); } catch {} }}
+                      data-has-value={!!formData.coolantFillDate ? "true" : "false"}
+                      className="custom-date-input" />
+                    <p className="text-xs text-muted-foreground mt-2">سيتم تذكيرك تلقائياً بعد 6 أشهر من هذا التاريخ لفحص المستوى.</p>
                   </div>
                 </div>
 
@@ -292,7 +358,9 @@ export default function Onboarding() {
                       <label className="text-sm font-medium text-foreground">{f.label}</label>
                       <input type="date" value={formData[f.key as keyof CarFormData] as string}
                         onChange={e => update(f.key as keyof CarFormData, e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        onClick={(e) => { try { (e.target as any).showPicker(); } catch {} }}
+                        data-has-value={!!formData[f.key as keyof CarFormData] ? "true" : "false"}
+                        className="custom-date-input" />
                     </div>
                   ))}
                 </div>
@@ -324,7 +392,9 @@ export default function Onboarding() {
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">تاريخ تغيير البطارية</label>
                       <input type="date" value={formData.batteryInstallDate} onChange={e => update('batteryInstallDate', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        onClick={(e) => { try { (e.target as any).showPicker(); } catch {} }}
+                        data-has-value={!!formData.batteryInstallDate ? "true" : "false"}
+                        className="custom-date-input" />
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">العمر المتوقع (أشهر)</label>
@@ -355,7 +425,9 @@ export default function Onboarding() {
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">تاريخ تغيير الإطارات</label>
                       <input type="date" value={formData.tireInstallDate} onChange={e => update('tireInstallDate', e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm text-foreground focus:border-primary outline-none [color-scheme:dark] transition-colors" />
+                        onClick={(e) => { try { (e.target as any).showPicker(); } catch {} }}
+                        data-has-value={!!formData.tireInstallDate ? "true" : "false"}
+                        className="custom-date-input" />
                     </div>
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block">العمر المتوقع (أشهر)</label>

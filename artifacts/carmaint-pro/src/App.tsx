@@ -27,6 +27,7 @@ import Tips from "@/pages/Tips";
 import Checkout from "@/pages/Checkout";
 import PaymentCallback from "@/pages/PaymentCallback";
 import Invoices from "@/pages/Invoices";
+import ReportByQR from "@/pages/ReportByQR";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -95,6 +96,9 @@ function Router() {
           </Route>
           <Route path="/invoices">
             {() => <ProtectedRoute component={Invoices} />}
+          </Route>
+          <Route path="/report/:carId">
+            {(params) => <ReportByQR params={params} />}
           </Route>
           <Route component={NotFound} />
         </Switch>

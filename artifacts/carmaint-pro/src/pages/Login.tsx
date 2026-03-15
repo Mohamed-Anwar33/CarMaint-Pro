@@ -8,7 +8,7 @@ import { CarMaintLogo } from "@/components/CarMaintLogo";
 export default function Login() {
   const { login, user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -27,14 +27,14 @@ export default function Login() {
     setError("");
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(phone, password);
       setLocation("/dashboard");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("Invalid login") || msg.includes("credentials")) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError("رقم الجوال أو كلمة المرور غير صحيحة");
       } else if (msg.includes("Email not confirmed")) {
-        setError("يرجى تأكيد بريدك الإلكتروني أولاً");
+        setError("يرجى تأكيد حسابك أولاً");
       } else if (msg.includes("DATA_FETCH_ERROR")) {
         setError("خطأ في الاتصال بقاعدة البيانات. تأكد من متغيّرات بيئة Netlify واعمل تحديث للصفحة.");
       } else {
@@ -71,9 +71,9 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-bold text-foreground mb-2">البريد الإلكتروني</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="example@email.com" required dir="ltr" autoComplete="email"
+              <label className="block text-sm font-bold text-foreground mb-2">رقم الجوال</label>
+              <input type="text" value={phone} onChange={e => setPhone(e.target.value)}
+                placeholder="05xxxxxxxx" required dir="ltr" autoComplete="tel"
                 className="w-full px-5 py-3.5 rounded-2xl bg-white/50 border border-border focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 text-foreground placeholder:text-muted-foreground transition-all outline-none font-medium" />
             </div>
             <div>

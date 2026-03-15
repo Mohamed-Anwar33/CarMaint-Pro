@@ -10,10 +10,13 @@ const PLAN_LABELS: Record<string, string> = { free: "مجاني", pro: "برو",
 const ROLE_LABELS: Record<string, string> = { manager: "مدير سيارات", driver: "سائق", both: "مدير وسائق", admin: "مسؤول النظام" };
 
 export default function Settings() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, updatePhone } = useAuth();
   const { toast } = useToast();
   
+  const extractPhone = (email: string) => email?.includes('@mdari.local') ? email.split('@')[0] : email;
+
   const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(extractPhone(user?.email || ""));
   const [newPassword, setNewPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -23,13 +26,23 @@ export default function Settings() {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const cleanPhone = phone.trim();
+    if (!name.trim() && !cleanPhone) return;
+    
     setSavingProfile(true);
     try {
-      await updateUser({ name: name.trim() });
+      if (name.trim() !== user?.name) {
+        await updateUser({ name: name.trim() });
+      }
+      
+      const currentPhone = extractPhone(user?.email || "");
+      if (cleanPhone && cleanPhone !== currentPhone) {
+        await updatePhone(cleanPhone);
+      }
+      
       toast({ title: "تم التحديث", description: "تم تحديث بيانات ملفك الشخصي بنجاح." });
-    } catch {
-      toast({ title: "خطأ", description: "حدث خطأ أثناء تحديث البيانات.", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message || "حدث خطأ أثناء تحديث البيانات.", variant: "destructive" });
     } finally {
       setSavingProfile(false);
     }
@@ -65,11 +78,11 @@ export default function Settings() {
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
             
             <div className="relative z-10 text-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-2xl font-black mx-auto mb-4">
-                {(user.name || user.email).charAt(0).toUpperCase()}
+              <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center text-2xl font-black mx-auto mb-4 font-num">
+                {user.name ? user.name.charAt(0).toUpperCase() : (user.email?.includes('@mdari.local') ? user.email.charAt(0) : "م")}
               </div>
-              <h2 className="text-xl font-bold text-foreground mb-1">{user.name || "مستخدم"}</h2>
-              <p className="text-sm text-muted-foreground truncate px-2">{user.email}</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">{user.name || (user.email?.includes('@mdari.local') ? user.email.split('@')[0] : user.email) || "مستخدم"}</h2>
+              <p className="text-sm text-muted-foreground truncate px-2" dir="ltr">{user.email?.includes('@mdari.local') ? user.email.split('@')[0] : user.email}</p>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-border/50">
@@ -124,12 +137,13 @@ export default function Settings() {
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">البريد الإلكتروني (لا يمكن تغييره حالياً)</label>
-                <input type="email" value={user.email} disabled className="w-full px-4 py-3 rounded-xl bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed" />
+                <label className="text-sm font-medium text-foreground">رقم الجوال</label>
+                <input type="text" value={phone} onChange={e => setPhone(e.target.value)} dir="ltr"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none transition-colors text-left font-num" />
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button type="submit" disabled={savingProfile || name === user.name || !name.trim()}
+                <button type="submit" disabled={savingProfile || (name === user.name && phone === extractPhone(user.email || "")) || (!name.trim() && !phone.trim())}
                   className="px-6 py-2.5 rounded-xl font-bold bg-primary text-white shadow-md shadow-primary/20 hover:shadow-primary/40 disabled:opacity-50 transition-all flex items-center gap-2">
                   {savingProfile ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />} حفظ التغييرات
                 </button>
@@ -199,8 +213,17 @@ export default function Settings() {
         confirmText="نعم، احذف حسابي"
         cancelText="إلغاء الأمر"
         variant="danger"
-        onConfirm={() => {
-          toast({ title: "رسالة نظام", description: "تم إرسال طلب حذف حسابك للإدارة. سيتم مسح بياناتك قريباً." });
+        onConfirm={async () => {
+          try {
+            const { error } = await supabase.rpc('delete_user_account');
+            if (error) throw error;
+            
+            await supabase.auth.signOut();
+            toast({ title: "تم مسح الحساب", description: "تم حذف حسابك وجميع بياناتك نهائياً." });
+            window.location.href = '/login';
+          } catch (err: any) {
+            toast({ title: "خطأ", description: err.message || "حدث خطأ أثناء محاولة حذف الحساب.", variant: "destructive" });
+          }
         }}
       />
     </div>

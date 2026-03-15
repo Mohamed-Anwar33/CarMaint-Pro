@@ -61,10 +61,10 @@ export function Navbar() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
                 >
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm border border-primary/30">
-                    {(user.name || user.email || "م").charAt(0).toUpperCase()}
+                    {user.name ? user.name.charAt(0).toUpperCase() : (user.email?.includes('@mdari.local') ? user.email.charAt(0) : "م")}
                   </div>
                   <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-bold text-white max-w-[120px] truncate">{user.name || user.email}</span>
+                    <span className="text-sm font-bold text-white max-w-[120px] truncate">{user.name || (user.email?.includes('@mdari.local') ? user.email.split('@')[0] : user.email)}</span>
                     <span className="text-[10px] text-primary/80 font-bold tracking-wide">
                       {user.role === 'admin' ? 'مسؤول النظام' : user.role === 'manager' ? 'مدير' : user.role === 'driver' ? 'سائق' : 'مدير وسائق'}
                     </span>
@@ -82,8 +82,8 @@ export function Navbar() {
                         className="absolute left-0 mt-2 w-52 rounded-xl bg-card border border-border/50 shadow-xl overflow-hidden z-50 origin-top-left"
                       >
                         <div className="p-3 border-b border-border/50">
-                          <p className="text-sm font-semibold text-foreground">{user.name || 'مستخدم'}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          <p className="text-sm font-semibold text-foreground">{user.name || (user.email?.includes('@mdari.local') ? user.email.split('@')[0] : "مستخدم")}</p>
+                          <p className="text-xs text-muted-foreground truncate" dir="ltr">{user.email?.includes('@mdari.local') ? user.email.split('@')[0] : user.email}</p>
                           <span className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
                             {user.role === 'admin' ? 'مسؤول' : user.role === 'manager' ? 'مدير' : user.role === 'driver' ? 'سائق' : 'مدير وسائق'}
                           </span>

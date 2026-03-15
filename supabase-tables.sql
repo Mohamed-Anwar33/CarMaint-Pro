@@ -24,7 +24,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
-  CREATE TYPE engine_oil_type AS ENUM ('5000km', '10000km');
+  CREATE TYPE engine_oil_type AS ENUM ('5000km', '10000km', 'custom');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
@@ -39,6 +39,10 @@ DO $$ BEGIN
   CREATE TYPE health_status AS ENUM ('green', 'yellow', 'red');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
+DO $$ BEGIN
+  CREATE TYPE account_type AS ENUM ('individual', 'family', 'company');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
 -- ============================================
 -- TABLES
 -- ============================================
@@ -51,6 +55,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT,
   role user_role NOT NULL DEFAULT 'manager',
   plan user_plan NOT NULL DEFAULT 'free',
+  account_type account_type NOT NULL DEFAULT 'individual',
   onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -63,7 +68,9 @@ CREATE TABLE IF NOT EXISTS cars (
   name TEXT NOT NULL,
   model_year INTEGER NOT NULL,
   transmission_type transmission_type NOT NULL,
-  engine_oil_type engine_oil_type NOT NULL,
+  engine_oil_type TEXT NOT NULL DEFAULT '10000km',
+  engine_oil_custom_days INTEGER,
+  engine_oil_custom_km INTEGER,
   coolant_fill_date TEXT,
   coolant_next_alert_date TEXT,
   registration_expiry TEXT,
@@ -72,11 +79,21 @@ CREATE TABLE IF NOT EXISTS cars (
   inspection_expiry TEXT,
   battery_install_date TEXT,
   battery_warranty_months INTEGER,
+  battery_brand TEXT,
+  battery_invoice TEXT,
   tire_install_date TEXT,
   tire_warranty_months INTEGER,
+  tire_size TEXT,
+  tire_invoice TEXT,
+  brakes_install_date TEXT,
   last_mileage INTEGER,
   next_oil_change_mileage INTEGER,
+  next_air_filter_mileage INTEGER,
+  last_report_date TIMESTAMP WITH TIME ZONE,
+  plate_number TEXT,
+  notes TEXT,
   driver_name TEXT,
+  invoices TEXT[] DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
@@ -102,6 +119,17 @@ CREATE TABLE IF NOT EXISTS driver_reports (
   ac_status health_status NOT NULL,
   notes TEXT,
   submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Invitations (for driver/family member invites)
+CREATE TABLE IF NOT EXISTS invitations (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  car_id TEXT NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+  driver_email TEXT NOT NULL,
+  manager_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(car_id, driver_email)
 );
 
 -- Push Subscriptions (for notifications)
@@ -136,13 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_driver_reports_car_id ON driver_reports(car_id);
 CREATE INDEX IF NOT EXISTS idx_driver_reports_driver_id ON driver_reports(driver_id);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(active);
-
--- ============================================
--- SAMPLE DATA (optional - delete if not needed)
--- ============================================
--- ============================================
--- SAMPLE DATA (optional - delete if not needed)
--- ============================================
--- Welcome announcement disabled.
+CREATE INDEX IF NOT EXISTS idx_invitations_manager_id ON invitations(manager_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_car_id ON invitations(car_id);
 
 SELECT 'تم إنشاء جداول قاعدة البيانات بنجاح! ✅' AS status;

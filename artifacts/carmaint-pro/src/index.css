@@ -147,6 +147,26 @@
     background-size: 300% auto;
     animation: gradient 8s linear infinite;
   }
+  
+  /* Custom Date Input Styling */
+  .custom-date-input {
+    @apply relative w-full h-11 sm:h-12 px-3 sm:px-4 rounded-xl bg-background border border-border focus:border-primary outline-none transition-colors text-foreground;
+    font-family: var(--font-mono);
+    color-scheme: light;
+  }
+  .custom-date-input::-webkit-calendar-picker-indicator {
+    @apply absolute left-3 sm:left-4 w-5 sm:w-6 h-5 sm:h-6 cursor-pointer opacity-100 bg-transparent;
+  }
+  .custom-date-input::-webkit-datetime-edit {
+    @apply pl-8 sm:pl-10;
+  }
+  .custom-date-input[data-has-value="false"]::-webkit-datetime-edit {
+    @apply text-transparent;
+  }
+  .custom-date-input[data-has-value="false"]::before {
+    content: "اختر التاريخ...";
+    @apply absolute top-1/2 -translate-y-1/2 right-3 sm:right-4 text-muted-foreground text-sm font-sans pointer-events-none;
+  }
 }
 
 /* Animations */

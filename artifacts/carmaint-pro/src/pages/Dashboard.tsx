@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
-import { Car, Settings, AlertTriangle, Plus, PenTool, CheckCircle, Mail, Gauge, Bell, Crown, Trash2, Edit2, UserPlus, X, Save, FileText, Users, Lock, Droplets, CircleDashed, ShieldAlert, Wind, MessageSquare, CalendarClock } from "lucide-react";
+import { Car, Settings, AlertTriangle, Plus, PenTool, CheckCircle, Mail, Gauge, Bell, Crown, Trash2, Edit2, UserPlus, X, Save, FileText, Users, Lock, Droplets, CircleDashed, ShieldAlert, Wind, MessageSquare, CalendarClock, Fuel, BatteryFull, Timer, Filter, RefreshCw, Disc } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +20,16 @@ interface CarData {
   driverName: string | null; lastReportDate: string | null; createdAt: string;
   invoices: string[];
   batteryInvoice: string | null; tireInvoice: string | null;
+  coolantFillDate: string | null;
+  batteryWarrantyMonths: number | null;
+  tireInstallDate: string | null;
+  tireWarrantyMonths: number | null;
+  lastMileage: number | null;
+  nextOilChangeMileage: number | null;
+  brakesInstallDate: string | null;
+  brakesWarrantyMonths: number | null;
+  coolantWarrantyMonths: number | null;
+  nextAirFilterMileage: number | null;
 }
 
 interface Announcement {
@@ -65,15 +75,29 @@ function ExpiryStatus({ label, date }: { label: string; date: string | null | un
 
 
 
-function ManagerReports() {
+function ManagerReports({ cars }: { cars: CarData[] }) {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCarId, setSelectedCarId] = useState<string>("all");
 
   useEffect(() => {
     const fetchReports = async () => {
+      if (!cars || cars.length === 0) {
+        setReports([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const { data, error } = await supabase.from("driver_reports").select("*, cars(name, driver_name)").order("submitted_at", { ascending: false });
-        if(error) throw error;
+        const carIds = cars.map((c) => c.id);
+        const { data, error } = await supabase
+          .from("driver_reports")
+          .select("*, cars(name, driver_name)")
+          .in("car_id", carIds)
+          .order("submitted_at", { ascending: false });
+
+        if (error) throw error;
+
         setReports(data.map((r: any) => ({
           ...r,
           mileage: r.current_mileage,
@@ -88,7 +112,9 @@ function ManagerReports() {
       }
     };
     fetchReports();
-  }, []);
+  }, [cars]);
+
+  const filteredReports = selectedCarId === "all" ? reports : reports.filter(r => r.car_id === selectedCarId);
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-32 gap-6 bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50">
@@ -115,11 +141,36 @@ function ManagerReports() {
 
   return (
     <div className="space-y-6">
-      {reports.map((report: any) => (
+      {/* Car Filter */}
+      {cars.length > 0 && (
+        <div className="flex items-center gap-3 bg-card/60 backdrop-blur-md p-3 rounded-2xl border border-border/50">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Filter className="w-4 h-4 text-primary" />
+          </div>
+          <select
+            value={selectedCarId}
+            onChange={(e) => setSelectedCarId(e.target.value)}
+            className="flex-1 h-10 px-3 rounded-xl bg-background border border-border text-sm text-foreground focus:border-primary outline-none transition-all appearance-none cursor-pointer font-bold"
+          >
+            <option value="all">جميع السيارات</option>
+            {cars.map(car => (
+              <option key={car.id} value={car.id}>{car.name} ({car.modelYear})</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {filteredReports.length === 0 ? (
+        <div className="py-16 text-center bg-card/30 backdrop-blur-md border border-dashed border-border/80 rounded-3xl">
+          <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <h3 className="text-lg font-bold text-foreground mb-1">لا توجد تقارير لهذه السيارة</h3>
+          <p className="text-muted-foreground text-sm">لم يتم إرسال أي تقارير لهذه السيارة بعد.</p>
+        </div>
+      ) : filteredReports.map((report: any) => (
         <div key={report.id} className="group relative bg-card/80 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-border transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden">
           {/* Subtle Accent Glow */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 group-hover:bg-primary/10 transition-colors" />
-          
+
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-8 border-b border-border/50 pb-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 shadow-inner">
@@ -135,7 +186,7 @@ function ManagerReports() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 bg-background/80 px-4 py-2 rounded-xl border border-border shadow-sm">
               <CalendarClock className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold text-foreground font-num">
@@ -227,10 +278,10 @@ const urlBase64ToUint8Array = (base64String: string) => {
   const base64 = (base64String + padding)
     .replace(/\-/g, '+')
     .replace(/_/g, '/');
-  
+
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  
+
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
@@ -247,7 +298,93 @@ export default function Dashboard() {
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [showOverduePush, setShowOverduePush] = useState(true);
   const [driverToRemove, setDriverToRemove] = useState<CarData | null>(null);
-  
+  const [qrModalCarId, setQrModalCarId] = useState<string | null>(null);
+
+  const [resetModalState, setResetModalState] = useState<{
+    isOpen: boolean; carId: string; type: 'oil' | 'battery' | 'tires' | 'brakes' | 'coolant' | 'airFilter';
+    isKmBased: boolean; title: string; carName: string;
+  }>({ isOpen: false, carId: '', type: 'oil', isKmBased: false, title: '', carName: '' });
+  const [newMileageStr, setNewMileageStr] = useState("");
+  const [resetDateStr, setResetDateStr] = useState(new Date().toISOString().split('T')[0]);
+  const [warrantyDuration, setWarrantyDuration] = useState(12);
+  const [warrantyUnit, setWarrantyUnit] = useState<'months' | 'years'>('months');
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleMaintenanceReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetModalState.carId) return;
+    setResetLoading(true);
+    try {
+      const dbUpdates: Record<string, any> = {};
+      const car = cars.find(c => c.id === resetModalState.carId);
+      if (!car) throw new Error("السيارة غير موجودة");
+
+      if (resetModalState.isKmBased) {
+        if (!newMileageStr) throw new Error("يرجى إدخال القراءة الحالية");
+        const mileage = parseInt(newMileageStr);
+        if (isNaN(mileage) || mileage < 0) throw new Error("قراءة العداد غير صحيحة");
+
+        dbUpdates.last_mileage = mileage;
+        if (resetModalState.type === 'oil') {
+          const interval = car.engineOilType === '5000km' ? 5000 : car.engineOilType === '10000km' ? 10000 : (car.engineOilCustomKm || 5000);
+          dbUpdates.next_oil_change_mileage = mileage + interval;
+        } else if (resetModalState.type === 'airFilter') {
+          dbUpdates.next_air_filter_mileage = mileage + 15000;
+        }
+      } else {
+        const selectedDate = resetDateStr || new Date().toISOString().split('T')[0];
+        const totalMonths = warrantyUnit === 'years' ? warrantyDuration * 12 : warrantyDuration;
+        if (resetModalState.type === 'battery') {
+          dbUpdates.battery_install_date = selectedDate;
+          dbUpdates.battery_warranty_months = totalMonths;
+        }
+        if (resetModalState.type === 'tires') {
+          dbUpdates.tire_install_date = selectedDate;
+          dbUpdates.tire_warranty_months = totalMonths;
+        }
+        if (resetModalState.type === 'brakes') {
+          dbUpdates.brakes_install_date = selectedDate;
+          dbUpdates.brakes_warranty_months = totalMonths;
+        }
+        if (resetModalState.type === 'coolant') {
+          dbUpdates.coolant_fill_date = selectedDate;
+          dbUpdates.coolant_warranty_months = totalMonths;
+        }
+      }
+
+      const { data, error } = await supabase.from('cars').update(dbUpdates).eq('id', resetModalState.carId).select().single();
+      if (error) throw error;
+
+      const mappedUpdated: CarData = {
+        ...car,
+        lastMileage: data.last_mileage != null ? data.last_mileage : car.lastMileage,
+        nextOilChangeMileage: data.next_oil_change_mileage != null ? data.next_oil_change_mileage : car.nextOilChangeMileage,
+        nextAirFilterMileage: data.next_air_filter_mileage != null ? data.next_air_filter_mileage : car.nextAirFilterMileage,
+        batteryInstallDate: data.battery_install_date != null ? data.battery_install_date : car.batteryInstallDate,
+        batteryWarrantyMonths: data.battery_warranty_months != null ? data.battery_warranty_months : car.batteryWarrantyMonths,
+        tireInstallDate: data.tire_install_date != null ? data.tire_install_date : car.tireInstallDate,
+        tireWarrantyMonths: data.tire_warranty_months != null ? data.tire_warranty_months : car.tireWarrantyMonths,
+        brakesInstallDate: data.brakes_install_date != null ? data.brakes_install_date : car.brakesInstallDate,
+        brakesWarrantyMonths: data.brakes_warranty_months != null ? data.brakes_warranty_months : car.brakesWarrantyMonths,
+        coolantFillDate: data.coolant_fill_date != null ? data.coolant_fill_date : car.coolantFillDate,
+        coolantWarrantyMonths: data.coolant_warranty_months != null ? data.coolant_warranty_months : car.coolantWarrantyMonths,
+      };
+
+      setCars(prev => prev.map(c => c.id === car.id ? mappedUpdated : c));
+      toast({ title: "تم التحديث", description: "تم تسجيل الصيانة بنجاح", variant: "default" });
+
+      setResetModalState(prev => ({ ...prev, isOpen: false }));
+      setNewMileageStr("");
+      setResetDateStr(new Date().toISOString().split('T')[0]);
+      setWarrantyDuration(12);
+      setWarrantyUnit('months');
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true); // Default true so it doesn't flash
 
@@ -265,9 +402,9 @@ export default function Dashboard() {
         toast({ title: "يجب الموافقة", description: "لم تقم بمنح صلاحية الإشعارات للمتصفح.", variant: "destructive" });
         return;
       }
-      
+
       const registration = await navigator.serviceWorker.ready;
-      
+
       // Removed the custom backend VAPID key fetch, replaced with the env variable directly
       const convertedVapidKey = urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY || "");
 
@@ -277,7 +414,7 @@ export default function Dashboard() {
       });
 
       const { data: { session } } = await supabase.auth.getSession();
-      if(session?.user) {
+      if (session?.user) {
         const subKeys = subscription.toJSON().keys;
         await supabase.from("push_subscriptions").upsert({
           user_id: session.user.id,
@@ -286,7 +423,7 @@ export default function Dashboard() {
           auth: subKeys?.auth || "",
         }, { onConflict: "endpoint" });
       }
-      
+
       setPushEnabled(true);
       toast({ title: "تم التفعيل", description: "تم تفعيل الإشعارات التلقائية بنجاح.", variant: "default" });
     } catch (err: any) {
@@ -305,8 +442,8 @@ export default function Dashboard() {
           supabase.from("cars").select("*").or(`owner_id.eq.${user.id},driver_id.eq.${user.id}`).order("created_at", { ascending: false }),
           supabase.from("announcements").select("*").eq("active", true).order("created_at", { ascending: false }),
         ]);
-        if(carsRes.error) throw carsRes.error;
-        if(annRes.error) throw annRes.error;
+        if (carsRes.error) throw carsRes.error;
+        if (annRes.error) throw annRes.error;
 
         setCars(carsRes.data.map(c => ({
           id: c.id, ownerId: c.owner_id, driverId: c.driver_id, name: c.name,
@@ -319,7 +456,17 @@ export default function Dashboard() {
           driverName: c.driver_name, lastReportDate: c.last_report_date, createdAt: c.created_at,
           invoices: c.invoices || [],
           batteryInvoice: c.battery_invoice || null,
-          tireInvoice: c.tire_invoice || null
+          tireInvoice: c.tire_invoice || null,
+          coolantFillDate: c.coolant_fill_date || null,
+          batteryWarrantyMonths: c.battery_warranty_months || null,
+          tireInstallDate: c.tire_install_date || null,
+          tireWarrantyMonths: c.tire_warranty_months || null,
+          lastMileage: c.last_mileage || null,
+          nextOilChangeMileage: c.next_oil_change_mileage || null,
+          brakesInstallDate: c.brakes_install_date || null,
+          brakesWarrantyMonths: c.brakes_warranty_months || null,
+          coolantWarrantyMonths: c.coolant_warranty_months || null,
+          nextAirFilterMileage: c.next_air_filter_mileage || null,
         })));
         setAnnouncements(annRes.data.map(a => ({
           id: a.id, title: a.title, message: a.message, type: a.type as any, active: a.active
@@ -382,11 +529,11 @@ export default function Dashboard() {
       {/* Push Notification for Overdue Reports */}
       <AnimatePresence>
         {hasOverduePush && (
-          <motion.div initial={{ y: -100, opacity: 0 }} 
-                      animate={{ y: 0, opacity: 1 }} 
-                      exit={{ y: -100, opacity: 0, scale: 0.9 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      className="fixed top-4 inset-x-4 z-50 md:max-w-md md:mx-auto">
+          <motion.div initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed top-4 inset-x-4 z-50 md:max-w-md md:mx-auto">
             <div className="bg-card/95 backdrop-blur-xl border border-destructive/30 p-4 rounded-3xl shadow-2xl flex items-start gap-4 cursor-pointer" onClick={() => setShowOverduePush(false)}>
               <div className="w-12 h-12 rounded-2xl bg-destructive flex items-center justify-center shrink-0 shadow-lg shadow-destructive/20 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/20 animate-pulse" />
@@ -458,8 +605,8 @@ export default function Dashboard() {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
                   "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap",
-                  activeTab === tab.id 
-                    ? tab.id === "driver" ? "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-100" : "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-100" 
+                  activeTab === tab.id
+                    ? tab.id === "driver" ? "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-100" : "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-100"
                     : "text-muted-foreground hover:text-foreground hover:bg-black/5 opacity-80 hover:opacity-100 scale-95"
                 )}
               >
@@ -498,41 +645,410 @@ export default function Dashboard() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   <AnimatePresence>
-                  {cars.map((car, i) => (
-                    <motion.div key={car.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ delay: i * 0.05, duration: 0.3 }}
-                      className="group relative bg-card backdrop-blur-md rounded-[24px] border border-border hover:border-primary/30 transition-all duration-500 shadow-xl shadow-black/5 hover:shadow-primary/10">
-                      
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 rounded-[24px] overflow-hidden bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    {cars.map((car, i) => (
+                      <motion.div key={car.id} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ delay: i * 0.05, duration: 0.3 }}
+                        className="group relative bg-card backdrop-blur-md rounded-[24px] border border-border hover:border-primary/30 transition-all duration-500 shadow-xl shadow-black/5 hover:shadow-primary/10">
 
-                      <div className="p-6 border-b border-border/50 flex justify-between items-start relative z-10">
-                        <div className="space-y-2">
-                          <h3 className="font-extrabold text-2xl text-foreground tracking-tight">{car.name}</h3>
-                          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-                            <span className="px-2.5 py-1 rounded-lg bg-muted text-foreground border border-border font-num">{car.modelYear}</span>
-                            <span className="px-2.5 py-1 rounded-lg bg-muted text-foreground border border-border">{car.transmissionType === "automatic" ? "اوتوماتيك" : "عادي"}</span>
-                            {(!car.lastReportDate || (daysUntil(car.lastReportDate) !== null && daysUntil(car.lastReportDate)! < -7)) && (
-                              <span className="px-2.5 py-1 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive flex items-center gap-1.5 shadow-sm">
-                                <AlertTriangle className="w-3.5 h-3.5" /> تقرير مفقود
-                              </span>
-                            )}
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 rounded-[24px] overflow-hidden bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                        <div className="p-6 border-b border-border/50 flex justify-between items-start relative z-50">
+                          <div className="space-y-2">
+                            <h3 className="font-extrabold text-2xl text-foreground tracking-tight">{car.name}</h3>
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                              <span className="px-2.5 py-1 rounded-lg bg-muted text-foreground border border-border font-num">{car.modelYear}</span>
+                              <span className="px-2.5 py-1 rounded-lg bg-muted text-foreground border border-border">{car.transmissionType === "automatic" ? "اوتوماتيك" : "عادي"}</span>
+                              {(!car.lastReportDate || (daysUntil(car.lastReportDate) !== null && daysUntil(car.lastReportDate)! < -7)) && (
+                                <span className="px-2.5 py-1 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive flex items-center gap-1.5 shadow-sm">
+                                  <AlertTriangle className="w-3.5 h-3.5" /> تقرير مفقود
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <CarActionsMenu car={car} userPlan={user.plan} onUpdate={(updated) => setCars(prev => prev.map(c => c.id === updated.id ? updated : c))} onDelete={(id) => setCars(prev => prev.filter(c => c.id !== id))} />
+                        </div>
+                        <div className="p-6 space-y-5 relative z-10 bg-gradient-to-b from-transparent to-muted/20 max-h-[420px] overflow-y-auto scrollbar-thin">
+                          <div className="grid grid-cols-3 gap-3">
+                            <ExpiryStatus label="الاستمارة" date={car.registrationExpiry} />
+                            <ExpiryStatus label="التأمين" date={car.insuranceExpiry} />
+                            <ExpiryStatus label="الفحص" date={car.inspectionExpiry} />
+                          </div>
+
+                          {/* Maintenance & Consumables Section */}
+                          <div className="pt-5 border-t border-border/50">
+                            <p className="text-xs text-muted-foreground font-bold tracking-wider mb-3 flex items-center gap-1.5">
+                              <Settings className="w-3.5 h-3.5" /> الصيانة والقطع الاستهلاكية
+                            </p>
+                            <div className="space-y-2">
+
+                              {/* Oil Change Status */}
+                              {(() => {
+                                const oilLabel = car.engineOilType === '5000km' ? 'كل 5,000 كم' : car.engineOilType === '10000km' ? 'كل 10,000 كم' : car.engineOilCustomKm ? `كل ${car.engineOilCustomKm.toLocaleString()} كم` : 'مخصص';
+                                const hasOilData = car.lastMileage != null && car.nextOilChangeMileage != null;
+                                const oilRemaining = hasOilData ? car.nextOilChangeMileage! - car.lastMileage! : null;
+                                const oilStatus = oilRemaining === null ? 'none' : oilRemaining <= 0 ? 'expired' : oilRemaining < 1000 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": oilStatus === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": oilStatus === 'warning',
+                                    "bg-background border-border/50": oilStatus === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": oilStatus === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": oilStatus === 'expired',
+                                      "bg-amber-500/10": oilStatus === 'warning' || oilStatus === 'none',
+                                      "bg-emerald-500/10": oilStatus === 'ok',
+                                    })}>
+                                      <Fuel className="w-4 h-4 text-amber-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">زيت المحرك</p>
+                                      <p className="text-[11px] text-muted-foreground">{oilLabel}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": oilStatus === 'expired',
+                                            "bg-amber-500 animate-pulse": oilStatus === 'warning',
+                                            "bg-emerald-500": oilStatus === 'ok',
+                                            "bg-muted-foreground/30": oilStatus === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": oilStatus === 'expired',
+                                            "text-amber-600": oilStatus === 'warning',
+                                            "text-foreground": oilStatus === 'ok',
+                                            "text-muted-foreground": oilStatus === 'none',
+                                          })}>
+                                            {hasOilData ? (oilRemaining! <= 0 ? `تجاوز ${Math.abs(oilRemaining!).toLocaleString()} كم` : `باقي ${oilRemaining!.toLocaleString()} كم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(oilStatus === 'warning' || oilStatus === 'expired' || oilStatus === 'none') && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'oil', isKmBased: true, title: 'تأكيد تغيير الزيت', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-amber-500 text-white text-[11px] font-bold transition-all hover:bg-amber-600 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {oilStatus === 'none' ? 'تحديث' : 'تم التغيير'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Air Filter Status */}
+                              {(() => {
+                                const hasData = car.lastMileage != null && car.nextAirFilterMileage != null;
+                                const remaining = hasData ? car.nextAirFilterMileage! - car.lastMileage! : null;
+                                const status = remaining === null ? 'none' : remaining <= 0 ? 'expired' : remaining < 1000 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": status === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": status === 'warning',
+                                    "bg-background border-border/50": status === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": status === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": status === 'expired',
+                                      "bg-amber-500/10": status === 'warning' || status === 'none',
+                                      "bg-emerald-500/10": status === 'ok',
+                                    })}>
+                                      <Wind className="w-4 h-4 text-cyan-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">فلتر الهواء</p>
+                                      <p className="text-[11px] text-muted-foreground">كل 15,000 كم</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": status === 'expired',
+                                            "bg-amber-500 animate-pulse": status === 'warning',
+                                            "bg-emerald-500": status === 'ok',
+                                            "bg-muted-foreground/30": status === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": status === 'expired',
+                                            "text-amber-600": status === 'warning',
+                                            "text-foreground": status === 'ok',
+                                            "text-muted-foreground": status === 'none',
+                                          })}>
+                                            {hasData ? (remaining! <= 0 ? `تجاوز ${Math.abs(remaining!).toLocaleString()} كم` : `باقي ${remaining!.toLocaleString()} كم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(status === 'warning' || status === 'expired' || status === 'none') && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'airFilter', isKmBased: true, title: 'تأكيد تغيير فلتر الهواء', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-cyan-500 text-white text-[11px] font-bold transition-all hover:bg-cyan-600 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {status === 'none' ? 'تحديث' : 'تم التغيير'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Battery Status */}
+                              {(() => {
+                                const hasBattery = !!car.batteryInstallDate;
+                                const warrantyMonths = car.batteryWarrantyMonths || 12;
+                                let daysLeft: number | null = null;
+                                if (hasBattery) {
+                                  const installDate = new Date(car.batteryInstallDate!);
+                                  const expiryDate = new Date(installDate);
+                                  expiryDate.setMonth(expiryDate.getMonth() + warrantyMonths);
+                                  daysLeft = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                }
+                                const status = !hasBattery ? 'none' : daysLeft! <= 0 ? 'expired' : daysLeft! < 60 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": status === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": status === 'warning',
+                                    "bg-background border-border/50": status === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": status === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": status === 'expired',
+                                      "bg-amber-500/10": status === 'warning' || status === 'none',
+                                      "bg-emerald-500/10": status === 'ok',
+                                    })}>
+                                      <BatteryFull className="w-4 h-4 text-emerald-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">البطارية</p>
+                                      <p className="text-[11px] text-muted-foreground">{car.batteryBrand || `ضمان ${warrantyMonths} شهر`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": status === 'expired',
+                                            "bg-amber-500 animate-pulse": status === 'warning',
+                                            "bg-emerald-500": status === 'ok',
+                                            "bg-muted-foreground/30": status === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": status === 'expired',
+                                            "text-amber-600": status === 'warning',
+                                            "text-foreground": status === 'ok',
+                                            "text-muted-foreground": status === 'none',
+                                          })}>
+                                            {hasBattery ? (daysLeft! <= 0 ? `منتهي` : `${daysLeft} يوم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(status === 'warning' || status === 'expired' || !hasBattery) && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'battery', isKmBased: false, title: 'تأكيد تغيير البطارية اليوم', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-white text-[11px] font-bold transition-all hover:bg-emerald-600 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {!hasBattery ? 'تحديث' : 'تم التغيير'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Tire Status */}
+                              {(() => {
+                                const hasTire = !!car.tireInstallDate;
+                                const warrantyMonths = car.tireWarrantyMonths || 36;
+                                let daysLeft: number | null = null;
+                                if (hasTire) {
+                                  const installDate = new Date(car.tireInstallDate!);
+                                  const expiryDate = new Date(installDate);
+                                  expiryDate.setMonth(expiryDate.getMonth() + warrantyMonths);
+                                  daysLeft = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                }
+                                const status = !hasTire ? 'none' : daysLeft! <= 0 ? 'expired' : daysLeft! < 60 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": status === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": status === 'warning',
+                                    "bg-background border-border/50": status === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": status === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": status === 'expired',
+                                      "bg-amber-500/10": status === 'warning' || status === 'none',
+                                      "bg-emerald-500/10": status === 'ok',
+                                    })}>
+                                      <CircleDashed className="w-4 h-4 text-secondary" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">الإطارات</p>
+                                      <p className="text-[11px] text-muted-foreground">{car.tireSize || `ضمان ${warrantyMonths} شهر`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": status === 'expired',
+                                            "bg-amber-500 animate-pulse": status === 'warning',
+                                            "bg-emerald-500": status === 'ok',
+                                            "bg-muted-foreground/30": status === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": status === 'expired',
+                                            "text-amber-600": status === 'warning',
+                                            "text-foreground": status === 'ok',
+                                            "text-muted-foreground": status === 'none',
+                                          })}>
+                                            {hasTire ? (daysLeft! <= 0 ? `منتهية` : `${daysLeft} يوم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(status === 'warning' || status === 'expired' || !hasTire) && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'tires', isKmBased: false, title: 'تأكيد تركيب إطارات جديدة', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-secondary text-white text-[11px] font-bold transition-all hover:opacity-90 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {!hasTire ? 'تحديث' : 'تم التركيب'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Brakes Status */}
+                              {(() => {
+                                const hasBrakes = !!car.brakesInstallDate && car.brakesInstallDate.trim() !== "";
+                                const warrantyMonths = car.brakesWarrantyMonths || 6;
+                                let daysLeft: number | null = null;
+                                if (hasBrakes) {
+                                  const installDate = new Date(car.brakesInstallDate!);
+                                  const expiryDate = new Date(installDate);
+                                  expiryDate.setMonth(expiryDate.getMonth() + warrantyMonths);
+                                  daysLeft = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                }
+                                const status = !hasBrakes ? 'none' : daysLeft! <= 0 ? 'expired' : daysLeft! < 30 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": status === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": status === 'warning',
+                                    "bg-background border-border/50": status === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": status === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": status === 'expired',
+                                      "bg-amber-500/10": status === 'warning' || status === 'none',
+                                      "bg-emerald-500/10": status === 'ok',
+                                    })}>
+                                      <Disc className="w-4 h-4 text-rose-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">الفرامل</p>
+                                      <p className="text-[11px] text-muted-foreground">{warrantyMonths >= 12 ? `ضمان ${warrantyMonths / 12} سنة` : `ضمان ${warrantyMonths} شهور`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": status === 'expired',
+                                            "bg-amber-500 animate-pulse": status === 'warning',
+                                            "bg-emerald-500": status === 'ok',
+                                            "bg-muted-foreground/30": status === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": status === 'expired',
+                                            "text-amber-600": status === 'warning',
+                                            "text-foreground": status === 'ok',
+                                            "text-muted-foreground": status === 'none',
+                                          })}>
+                                            {hasBrakes ? (daysLeft! <= 0 ? `يحتاج فحص` : `${daysLeft} يوم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(status === 'warning' || status === 'expired' || !hasBrakes) && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'brakes', isKmBased: false, title: 'تأكيد صيانة الفرامل/تغيير الأقمشة', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-rose-500 text-white text-[11px] font-bold transition-all hover:bg-rose-600 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {!hasBrakes ? 'تحديث' : 'تم الصيانة'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Coolant Status */}
+                              {(() => {
+                                const hasCoolant = !!car.coolantFillDate && car.coolantFillDate.trim() !== "";
+                                const warrantyMonths = car.coolantWarrantyMonths || 6;
+                                let daysLeft: number | null = null;
+                                if (hasCoolant) {
+                                  const fillDate = new Date(car.coolantFillDate!);
+                                  const alertDate = new Date(fillDate);
+                                  alertDate.setMonth(alertDate.getMonth() + warrantyMonths);
+                                  daysLeft = Math.ceil((alertDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                                }
+                                const status = !hasCoolant ? 'none' : daysLeft! <= 0 ? 'expired' : daysLeft! < 30 ? 'warning' : 'ok';
+                                return (
+                                  <div className={cn("flex items-center gap-3 p-3 rounded-xl border transition-all", {
+                                    "bg-destructive/5 border-destructive/20": status === 'expired',
+                                    "bg-amber-500/5 border-amber-500/20": status === 'warning',
+                                    "bg-background border-border/50": status === 'ok',
+                                    "bg-muted/20 border-border/40 border-dashed": status === 'none',
+                                  })}>
+                                    <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", {
+                                      "bg-destructive/10": status === 'expired',
+                                      "bg-amber-500/10": status === 'warning' || status === 'none',
+                                      "bg-emerald-500/10": status === 'ok',
+                                    })}>
+                                      <Droplets className="w-4 h-4 text-sky-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-bold text-foreground">سائل التبريد</p>
+                                      <p className="text-[11px] text-muted-foreground">{warrantyMonths >= 12 ? `كل ${warrantyMonths / 12} سنة` : `كل ${warrantyMonths} شهور`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-left">
+                                        <div className="flex items-center gap-1.5">
+                                          <div className={cn("w-2 h-2 rounded-full", {
+                                            "bg-destructive animate-pulse": status === 'expired',
+                                            "bg-amber-500 animate-pulse": status === 'warning',
+                                            "bg-emerald-500": status === 'ok',
+                                            "bg-muted-foreground/30": status === 'none',
+                                          })} />
+                                          <span className={cn("font-num text-xs font-bold", {
+                                            "text-destructive": status === 'expired',
+                                            "text-amber-600": status === 'warning',
+                                            "text-foreground": status === 'ok',
+                                            "text-muted-foreground": status === 'none',
+                                          })}>
+                                            {hasCoolant ? (daysLeft! <= 0 ? `يحتاج فحص` : `${daysLeft} يوم`) : '—'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {(status === 'warning' || status === 'expired' || !hasCoolant) && (
+                                        <button onClick={(e) => { e.preventDefault(); setResetModalState({ isOpen: true, carId: car.id, type: 'coolant', isKmBased: false, title: 'تأكيد تعبئة سائل التبريد بالكامل', carName: car.name }); }}
+                                          className="px-2.5 py-1.5 rounded-lg bg-sky-500 text-white text-[11px] font-bold transition-all hover:bg-sky-600 shadow-sm hover:shadow-md whitespace-nowrap">
+                                          {!hasCoolant ? 'تحديث' : 'تم التعبئة'}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
                           </div>
                         </div>
-                        <CarActionsMenu car={car} userPlan={user.plan} onUpdate={(updated) => setCars(prev => prev.map(c => c.id === updated.id ? updated : c))} onDelete={(id) => setCars(prev => prev.filter(c => c.id !== id))} />
-                      </div>
-                      <div className="p-6 space-y-5 relative z-10 bg-gradient-to-b from-transparent to-muted/20">
-                        <div className="grid grid-cols-3 gap-3">
-                          <ExpiryStatus label="الاستمارة" date={car.registrationExpiry} />
-                          <ExpiryStatus label="التأمين" date={car.insuranceExpiry} />
-                          <ExpiryStatus label="الفحص" date={car.inspectionExpiry} />
-                        </div>
-                        
-                        <div className="pt-5 border-t border-border/50">
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs text-muted-foreground font-bold tracking-wider">عضو العائلة المعين</p>
-                            {car.driverName && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold uppercase">متصل</span>}
+
+                        {/* Fixed Footer - QR + Driver (outside scroll) */}
+                        <div className="px-6 pb-6 relative z-10 space-y-4">
+                          {/* QR Code Quick Access Button */}
+                          <div className="pt-4 border-t border-border/50">
+                            <button onClick={() => setQrModalCarId(car.id)}
+                              className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-amber-500/10 border border-primary/20 hover:border-primary/40 text-primary font-bold text-sm transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 active:translate-y-0">
+                              <QrCode className="w-4.5 h-4.5" />
+                              <span>عرض باركود السيارة</span>
+                            </button>
                           </div>
-                          
+
+
+                          <div className="pt-5 border-t border-border/50">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-xs text-muted-foreground font-bold tracking-wider">عضو العائلة المعين</p>
+                              {car.driverName && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-bold uppercase">متصل</span>}
+                            </div>
+
                             {car.driverName ? (
                               <div className="flex items-center justify-between gap-3 bg-muted/60 p-3 rounded-2xl border border-border group-hover:bg-muted transition-colors w-full">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -555,10 +1071,10 @@ export default function Dashboard() {
                             ) : (
                               <InviteDriverButton carId={car.id} carName={car.name} userPlan={user.plan} onInvited={(driverName) => setCars(prev => prev.map(c => c.id === car.id ? { ...c, driverName } : c))} />
                             )}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ))}
                   </AnimatePresence>
                 </div>
               )}
@@ -566,7 +1082,7 @@ export default function Dashboard() {
           )}
 
           {activeTab === "reports" && (
-            <ManagerReports />
+            <ManagerReports cars={cars} />
           )}
 
           {activeTab === "drivers" && (
@@ -582,44 +1098,51 @@ export default function Dashboard() {
                 <p className="text-muted-foreground text-sm flex items-center gap-1.5 font-medium"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> الأسبوع الحالي</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {cars.length === 0 ? (
-                <div className="col-span-full py-12 text-center border border-dashed border-border rounded-2xl">
-                  <Car className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                  <h3 className="text-lg font-medium text-foreground">لا توجد سيارات مخصصة لك</h3>
-                  <p className="text-sm text-muted-foreground mt-1">اطلب من مديرك إرسال دعوة لبريدك الإلكتروني.</p>
-                </div>
-              ) : (
-                cars.map((car, i) => {
-                  const needsReport = !car.lastReportDate || daysUntil(car.lastReportDate) !== null && daysUntil(car.lastReportDate)! < -7;
-                  return (
-                  <motion.div key={car.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-                    className={cn("bg-card rounded-2xl border p-6 relative overflow-hidden shadow-2xl", needsReport ? "border-destructive/50 shadow-destructive/10" : "border-primary/20 shadow-primary/5")}>
-                    <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl", needsReport ? "bg-destructive/10" : "bg-primary/10")} />
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                      <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg", needsReport ? "bg-gradient-to-br from-destructive to-red-600 shadow-destructive/20" : "bg-gradient-to-br from-primary to-orange-600 shadow-primary/20")}>
-                        <Car className="w-8 h-8 text-foreground" />
-                      </div>
-                      <h3 className="font-bold text-xl text-foreground mb-1">{car.name}</h3>
-                      <p className="text-sm text-primary mb-2 font-num">{car.modelYear}</p>
-                      
-                      {needsReport && (
-                        <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 px-3 py-1.5 rounded-lg border border-destructive/20 mb-6 font-medium">
-                          <AlertTriangle className="w-3.5 h-3.5" /> يرجى تحديث حالة السيارة الأسبوعية
-                        </div>
-                      )}
-                      {!needsReport && (
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 mb-6 font-medium">
-                          <CheckCircle className="w-3.5 h-3.5" /> السيارة محدثة
-                        </div>
-                      )}
+                {cars.length === 0 ? (
+                  <div className="col-span-full py-12 text-center border border-dashed border-border rounded-2xl">
+                    <Car className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                    <h3 className="text-lg font-medium text-foreground">لا توجد سيارات مخصصة لك</h3>
+                    <p className="text-sm text-muted-foreground mt-1">اطلب من مديرك إرسال دعوة لبريدك الإلكتروني.</p>
+                  </div>
+                ) : (
+                  cars.map((car, i) => {
+                    const needsReport = !car.lastReportDate || daysUntil(car.lastReportDate) !== null && daysUntil(car.lastReportDate)! < -7;
+                    return (
+                      <motion.div key={car.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                        className={cn("bg-card rounded-2xl border p-6 relative overflow-hidden shadow-2xl", needsReport ? "border-destructive/50 shadow-destructive/10" : "border-primary/20 shadow-primary/5")}>
+                        <div className={cn("absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl", needsReport ? "bg-destructive/10" : "bg-primary/10")} />
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                          <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg", needsReport ? "bg-gradient-to-br from-destructive to-red-600 shadow-destructive/20" : "bg-gradient-to-br from-primary to-orange-600 shadow-primary/20")}>
+                            <Car className="w-8 h-8 text-foreground" />
+                          </div>
+                          <h3 className="font-bold text-xl text-foreground mb-1">{car.name}</h3>
+                          <p className="text-sm text-primary mb-2 font-num">{car.modelYear}</p>
 
-                      <ReportModal carId={car.id} carName={car.name} onReportSubmitted={(date) => {
-                        setCars(prev => prev.map(c => c.id === car.id ? { ...c, lastReportDate: date } : c));
-                      }} />
-                    </div>
-                  </motion.div>
-                )})
-              )}
+                          {needsReport && (
+                            <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 px-3 py-1.5 rounded-lg border border-destructive/20 mb-6 font-medium">
+                              <AlertTriangle className="w-3.5 h-3.5" /> يرجى تحديث حالة السيارة الأسبوعية
+                            </div>
+                          )}
+                          {!needsReport && (
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/20 mb-3 font-medium">
+                              <CheckCircle className="w-3.5 h-3.5" /> السيارة محدثة
+                            </div>
+                          )}
+
+                          <p className="text-[11px] text-muted-foreground mb-5 font-medium">
+                            {car.lastReportDate
+                              ? `آخر تقرير: ${new Date(car.lastReportDate).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" })}`
+                              : "لم يتم إرسال تقرير بعد"}
+                          </p>
+
+                          <ReportModal carId={car.id} carName={car.name} onReportSubmitted={(date) => {
+                            setCars(prev => prev.map(c => c.id === car.id ? { ...c, lastReportDate: date } : c));
+                          }} />
+                        </div>
+                      </motion.div>
+                    )
+                  })
+                )}
               </div>
             </div>
           )}
@@ -646,6 +1169,167 @@ export default function Dashboard() {
           setDriverToRemove(null);
         }}
       />
+
+      {/* Maintenance Reset Modal */}
+      {resetModalState.isOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm pointer-events-auto" dir="rtl" style={{ position: 'fixed' }}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-border/60 p-6 md:p-8 rounded-3xl max-w-sm w-full shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-emerald-500 to-emerald-400" />
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-5 mx-auto">
+              {resetModalState.type === 'oil' && <Fuel className="w-7 h-7" />}
+              {resetModalState.type === 'airFilter' && <Wind className="w-7 h-7" />}
+              {resetModalState.type === 'tires' && <CircleDashed className="w-7 h-7" />}
+              {resetModalState.type === 'brakes' && <Disc className="w-7 h-7" />}
+              {resetModalState.type === 'battery' && <BatteryFull className="w-7 h-7" />}
+              {resetModalState.type === 'coolant' && <Droplets className="w-7 h-7" />}
+            </div>
+
+            <h3 className="text-xl font-bold text-foreground text-center mb-1">{resetModalState.title}</h3>
+            <p className="text-muted-foreground text-sm text-center mb-6">سيارة: <span className="text-foreground font-bold">{resetModalState.carName}</span></p>
+
+            <form onSubmit={handleMaintenanceReset}>
+              {resetModalState.isKmBased ? (
+                <div className="mb-6 space-y-3">
+                  <label className="text-sm font-bold text-foreground block">القراءة الحالية لعداد السيارة</label>
+                  <div className="relative">
+                    <input type="number"
+                      value={newMileageStr} onChange={e => setNewMileageStr(e.target.value)}
+                      placeholder="مثال: 125000"
+                      autoFocus
+                      className="w-full h-12 pl-12 pr-4 text-left font-num rounded-xl bg-background border border-border focus:border-emerald-500 outline-none transition-colors" />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">كم</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">سيتم بناء موعد الصيانة القادم بناءً على هذه القراءة.</p>
+                </div>
+              ) : (
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <label className="text-sm font-bold text-foreground block mb-1.5">
+                      {resetModalState.type === 'battery' ? 'تاريخ تركيب البطارية' :
+                        resetModalState.type === 'tires' ? 'تاريخ تركيب الإطارات' :
+                          resetModalState.type === 'brakes' ? 'تاريخ صيانة الفرامل' :
+                            'تاريخ تعبئة سائل التبريد'}
+                    </label>
+                    <input type="date"
+                      value={resetDateStr} onChange={e => setResetDateStr(e.target.value)}
+                      onClick={(e) => { try { (e.target as any).showPicker(); } catch { } }}
+                      data-has-value={!!resetDateStr}
+                      className="custom-date-input" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-foreground block mb-2">مدة الضمان</label>
+                    <div className="flex rounded-xl border border-border overflow-hidden mb-3">
+                      <button type="button" onClick={() => setWarrantyUnit('months')}
+                        className={cn("flex-1 py-3 text-sm font-bold transition-colors", warrantyUnit === 'months' ? 'bg-emerald-500 text-white' : 'bg-background text-muted-foreground hover:bg-muted')}>
+                        شهور
+                      </button>
+                      <button type="button" onClick={() => setWarrantyUnit('years')}
+                        className={cn("flex-1 py-3 text-sm font-bold transition-colors border-r border-border", warrantyUnit === 'years' ? 'bg-emerald-500 text-white' : 'bg-background text-muted-foreground hover:bg-muted')}>
+                        سنوات
+                      </button>
+                    </div>
+                    <input type="number" min="1"
+                      value={warrantyDuration} onChange={e => setWarrantyDuration(parseInt(e.target.value) || 1)}
+                      className="w-full h-14 px-4 font-num rounded-xl bg-background border border-border focus:border-emerald-500 outline-none transition-colors text-center text-2xl font-bold" />
+                  </div>
+                  <p className="text-xs text-muted-foreground bg-emerald-500/5 p-2.5 rounded-lg border border-emerald-500/10">
+                    سيتم حساب انتهاء الضمان بعد <strong className="text-foreground">{warrantyUnit === 'years' ? `${warrantyDuration} سنة` : `${warrantyDuration} شهر`}</strong> من تاريخ التركيب وإرسال تنبيه عند الاقتراب.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-4">
+                <button type="button" onClick={() => setResetModalState(prev => ({ ...prev, isOpen: false }))} className="flex-1 py-3 rounded-xl border border-border text-foreground hover:bg-black/5 transition-colors font-bold">إلغاء</button>
+                <button type="submit" disabled={resetLoading} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-emerald-600">
+                  {resetLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "تأكيد والتحديث"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>,
+        document.body
+      )}
+
+      {/* Top-level QR Code Modal */}
+      {qrModalCarId && (() => {
+        const qrCar = cars.find(c => c.id === qrModalCarId);
+        if (!qrCar) return null;
+        const qrUrl = `${window.location.origin}/report/${qrCar.id}`;
+        return createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm pointer-events-auto" dir="rtl" style={{ position: 'fixed' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              className="bg-card border border-border/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center relative flex flex-col items-center">
+              <button onClick={() => setQrModalCarId(null)} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                <QrCode className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-1">باركود {qrCar.name}</h3>
+              <p className="text-muted-foreground text-sm mb-6">امسح الباركود مباشرة لرفع تقرير لهذه السيارة متى شئت.</p>
+
+              <div id={`qr-main-${qrCar.id}`} className="bg-white p-5 rounded-2xl shadow-sm border border-border/50 mb-6">
+                <QRCodeSVG value={qrUrl} size={220} level="H" includeMargin={false} />
+                <p className="text-xs text-gray-500 mt-3 font-bold">{qrCar.name}</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2.5 w-full">
+                <button onClick={() => {
+                  navigator.clipboard.writeText(qrUrl);
+                  toast({ title: "تم النسخ", description: "تم نسخ الرابط بنجاح" });
+                }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                  <span className="text-[10px] font-bold">نسخ الرابط</span>
+                </button>
+                <button onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: `فحص سيارة: ${qrCar.name}`, text: `رابط فحص ${qrCar.name}`, url: qrUrl });
+                  } else {
+                    navigator.clipboard.writeText(qrUrl);
+                    toast({ title: "تم النسخ", description: "تم نسخ الرابط — يمكنك مشاركته يدوياً" });
+                  }
+                }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+                  <span className="text-[10px] font-bold">مشاركة</span>
+                </button>
+                <button onClick={() => {
+                  const svgEl = document.querySelector(`#qr-main-${qrCar.id} svg`);
+                  if (!svgEl) return;
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 300; canvas.height = 340;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) return;
+                  ctx.fillStyle = '#fff';
+                  ctx.fillRect(0, 0, 300, 340);
+                  const svgData = new XMLSerializer().serializeToString(svgEl);
+                  const img = new Image();
+                  img.onload = () => {
+                    ctx.drawImage(img, 40, 20, 220, 220);
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(qrCar.name, 150, 280);
+                    ctx.font = '12px sans-serif';
+                    ctx.fillStyle = '#888';
+                    ctx.fillText('Mdari - \u0641\u062d\u0635 \u0627\u0644\u0633\u064a\u0627\u0631\u0629', 150, 305);
+                    const a = document.createElement('a');
+                    a.download = `qr-${qrCar.name}.png`;
+                    a.href = canvas.toDataURL('image/png');
+                    a.click();
+                    toast({ title: "تم التحميل", description: "تم تحميل صورة الباركود" });
+                  };
+                  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  <span className="text-[10px] font-bold">حفظ صورة</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>,
+          document.body
+        );
+      })()}
     </div>
   );
 }
@@ -666,12 +1350,14 @@ function EmptyState() {
   );
 }
 
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; userPlan: string; onUpdate: (c: CarData) => void; onDelete: (id: string) => void }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
@@ -704,14 +1390,14 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
     }
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setUploadingGeneric(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${car.id}/${fileName}`;
       const { error: uploadError } = await supabase.storage.from('invoices').upload(filePath, file);
-      
+
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('invoices').getPublicUrl(filePath);
@@ -721,7 +1407,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
       toast({ title: "خطأ", description: err.message || "حدث خطأ أثناء رفع الفاتورة.", variant: "destructive" });
     } finally {
       setUploadingGeneric(false);
-      if(e.target) e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -745,7 +1431,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('invoices').getPublicUrl(filePath);
-      
+
       if (type === "battery") setBatteryInvoice(data.publicUrl);
       if (type === "tire") setTireInvoice(data.publicUrl);
 
@@ -755,7 +1441,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
     } finally {
       if (type === "battery") setUploadingBattery(false);
       if (type === "tire") setUploadingTire(false);
-      if(e.target) e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -782,10 +1468,10 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
         tire_invoice: tireInvoice || null,
         invoices: invoices.length > 0 ? invoices : null,
       };
-      
+
       const { data, error } = await supabase.from("cars").update(dbCar).eq("id", car.id).select().single();
-      if(error) throw error;
-      
+      if (error) throw error;
+
       const mappedUpdated: CarData = {
         id: data.id, ownerId: data.owner_id, driverId: data.driver_id, name: data.name,
         modelYear: data.model_year, transmissionType: data.transmission_type as any, engineOilType: data.engine_oil_type as any,
@@ -796,7 +1482,17 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
         engineOilCustomDays: data.engine_oil_custom_days, engineOilCustomKm: data.engine_oil_custom_km,
         driverName: data.driver_name, lastReportDate: data.last_report_date, createdAt: data.created_at,
         invoices: data.invoices || invoices,
-        batteryInvoice: data.battery_invoice, tireInvoice: data.tire_invoice
+        batteryInvoice: data.battery_invoice, tireInvoice: data.tire_invoice,
+        coolantFillDate: data.coolant_fill_date || null,
+        batteryWarrantyMonths: data.battery_warranty_months || null,
+        tireInstallDate: data.tire_install_date || null,
+        tireWarrantyMonths: data.tire_warranty_months || null,
+        lastMileage: data.last_mileage || null,
+        nextOilChangeMileage: data.next_oil_change_mileage || null,
+        brakesInstallDate: data.brakes_install_date || null,
+        brakesWarrantyMonths: data.brakes_warranty_months || null,
+        coolantWarrantyMonths: data.coolant_warranty_months || null,
+        nextAirFilterMileage: data.next_air_filter_mileage || null,
       };
 
       onUpdate(mappedUpdated);
@@ -812,7 +1508,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
     setDeleting(true);
     try {
       const { error } = await supabase.from("cars").delete().eq("id", car.id);
-      if(error) throw error;
+      if (error) throw error;
       onDelete(car.id);
       toast({ title: "تم الحذف", description: "تم حذف السيارة بنجاح" });
     } catch {
@@ -830,14 +1526,18 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
         </button>
         {showMenu && (
           <>
-            <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-            <div className="absolute top-full mt-1 left-0 z-40 bg-card border border-border rounded-xl shadow-xl overflow-hidden min-w-[150px]" dir="rtl">
-              <button onClick={() => { setShowMenu(false); setShowEdit(true); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-black/5 transition-colors">
-                <Edit2 className="w-3.5 h-3.5" /> تعديل البيانات
+            <div className="fixed inset-0 z-[100]" onClick={() => setShowMenu(false)} />
+            <div className="absolute top-full mt-2 left-0 z-[110] bg-white border border-border rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] min-w-[180px]" dir="rtl">
+              <button onClick={() => { setShowMenu(false); setShowQRCode(true); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 text-sm font-medium text-foreground hover:bg-muted active:bg-muted transition-colors">
+                <QrCode className="w-4 h-4 text-primary" /> باركود السيارة
               </button>
-              <div className="border-t border-border/50" />
-              <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors">
-                <Trash2 className="w-3.5 h-3.5" /> حذف السيارة
+              <div className="border-t border-border/50 mx-3" />
+              <button onClick={() => { setShowMenu(false); setShowEdit(true); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 text-sm font-medium text-foreground hover:bg-muted active:bg-muted transition-colors">
+                <Edit2 className="w-4 h-4 text-muted-foreground" /> تعديل البيانات
+              </button>
+              <div className="border-t border-border/50 mx-3" />
+              <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 text-sm font-medium text-destructive hover:bg-destructive/10 active:bg-destructive/15 transition-colors">
+                <Trash2 className="w-4 h-4" /> حذف السيارة
               </button>
             </div>
           </>
@@ -849,7 +1549,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm pointer-events-auto" dir="rtl" style={{ position: 'fixed' }}>
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-3xl w-full max-w-2xl shadow-2xl relative flex flex-col max-h-[90vh]">
-            
+
             {/* Modal Header (Fixed) */}
             <div className="flex items-center justify-between p-6 sm:px-8 border-b border-border/50 shrink-0">
               <div className="flex items-center gap-3">
@@ -868,7 +1568,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
 
             {/* Modal Body (Scrollable) */}
             <div className="p-6 sm:p-8 space-y-8 overflow-y-auto scrollbar-hide flex-1">
-              
+
               {/* Info Section */}
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4 border-b border-border/50 pb-2">
@@ -917,7 +1617,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
                     </select>
                   </div>
                 </div>
-                
+
                 {editEngineOilType === "custom" && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 p-4 rounded-2xl bg-secondary/5 border border-secondary/20 relative overflow-hidden">
                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-secondary/40 to-transparent" />
@@ -957,17 +1657,23 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-foreground">الاستمارة</label>
                     <input type="date" value={editRegExpiry} onChange={e => setEditRegExpiry(e.target.value)}
-                      className="w-full h-12 px-3 rounded-xl bg-background border border-border text-sm text-foreground focus:border-primary outline-none transition-all" />
+                      onClick={(e) => { try { (e.target as any).showPicker(); } catch { } }}
+                      data-has-value={!!editRegExpiry}
+                      className="custom-date-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-foreground">التأمين</label>
                     <input type="date" value={editInsExpiry} onChange={e => setEditInsExpiry(e.target.value)}
-                      className="w-full h-12 px-3 rounded-xl bg-background border border-border text-sm text-foreground focus:border-primary outline-none transition-all" />
+                      onClick={(e) => { try { (e.target as any).showPicker(); } catch { } }}
+                      data-has-value={!!editInsExpiry}
+                      className="custom-date-input" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-foreground">الفحص الدوري</label>
                     <input type="date" value={editInspExpiry} onChange={e => setEditInspExpiry(e.target.value)}
-                      className="w-full h-12 px-3 rounded-xl bg-background border border-border text-sm text-foreground focus:border-primary outline-none transition-all" />
+                      onClick={(e) => { try { (e.target as any).showPicker(); } catch { } }}
+                      data-has-value={!!editInspExpiry}
+                      className="custom-date-input" />
                   </div>
                 </div>
 
@@ -976,7 +1682,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
                     <label className="text-xs font-bold text-foreground flex items-center gap-1.5"><UploadCloud className="w-3.5 h-3.5" /> فواتير الضمان والصيانة</label>
                     {userPlan === "free" && <span className="text-[10px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20">ميزة مدفوعة</span>}
                   </div>
-                  
+
                   {userPlan === "free" ? (
                     <div className="bg-muted p-4 rounded-xl border border-border text-center">
                       <Lock className="w-5 h-5 text-muted-foreground mx-auto mb-2 opacity-50" />
@@ -989,7 +1695,7 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                           {invoices.map((inv, idx) => (
                             <a key={idx} href={inv} target="_blank" rel="noreferrer" className="relative group block rounded-lg overflow-hidden border border-border aspect-video bg-muted/50">
-                              <img src={inv} alt={`Invoice ${idx+1}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                              <img src={inv} alt={`Invoice ${idx + 1}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
                               <div className="hidden absolute inset-0 flex items-center justify-center text-xs text-muted-foreground"><FileText className="w-4 h-4 mb-1" /> ملف</div>
                               <button type="button" onClick={(e) => { e.preventDefault(); setInvoices(prev => prev.filter((_, i) => i !== idx)); }} className="absolute top-1 left-1 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"><X className="w-3 h-3" /></button>
                             </a>
@@ -1034,13 +1740,95 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             className="bg-card border border-destructive/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center">
             <div className="w-16 h-16 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-4">
-               <Trash2 className="w-8 h-8" />
+              <Trash2 className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">حذف السيارة</h3>
             <p className="text-muted-foreground text-sm mb-6">هل أنت متأكد من حذف <span className="text-foreground font-medium">{car.name}</span>؟ لا يمكن التراجع عن هذا الإجراء.</p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-3 rounded-xl border border-border text-foreground hover:bg-black/5 transition-colors">إلغاء</button>
               <button onClick={handleDelete} disabled={deleting} className="flex-1 py-3 rounded-xl bg-destructive text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                حذف
+              </button>
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
+
+      {/* QR Code Modal */}
+      {showQRCode && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm pointer-events-auto" dir="rtl" style={{ position: 'fixed' }}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-border/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl text-center relative flex flex-col items-center">
+            <button onClick={() => setShowQRCode(false)} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" title="إغلاق">
+              <X className="w-4 h-4" />
+            </button>
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <QrCode className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground mb-1">باركود السيارة</h3>
+            <p className="text-muted-foreground text-sm mb-6">امسح الباركود مباشرة لرفع تقرير لهذه السيارة متى شئت.</p>
+
+            <div id={`qr-container-${car.id}`} className="bg-white p-5 rounded-2xl shadow-sm border border-border/50 mb-6">
+              <QRCodeSVG
+                value={`${window.location.origin}/report/${car.id}`}
+                size={220}
+                level="H"
+                includeMargin={false}
+              />
+              <p className="text-xs text-gray-500 mt-3 font-bold">{car.name}</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2.5 w-full mb-3">
+              <button onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/report/${car.id}`);
+                toast({ title: "تم النسخ", description: "تم نسخ الرابط بنجاح" });
+              }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                <span className="text-[10px] font-bold">نسخ الرابط</span>
+              </button>
+              <button onClick={() => {
+                const url = `${window.location.origin}/report/${car.id}`;
+                if (navigator.share) {
+                  navigator.share({ title: `فحص سيارة: ${car.name}`, text: `رابط فحص ${car.name}`, url });
+                } else {
+                  navigator.clipboard.writeText(url);
+                  toast({ title: "تم النسخ", description: "تم نسخ الرابط — يمكنك مشاركته يدوياً" });
+                }
+              }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+                <span className="text-[10px] font-bold">مشاركة</span>
+              </button>
+              <button onClick={() => {
+                const svgEl = document.querySelector(`#qr-container-${car.id} svg`);
+                if (!svgEl) return;
+                const canvas = document.createElement('canvas');
+                canvas.width = 300; canvas.height = 340;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, 300, 340);
+                const svgData = new XMLSerializer().serializeToString(svgEl);
+                const img = new Image();
+                img.onload = () => {
+                  ctx.drawImage(img, 40, 20, 220, 220);
+                  ctx.fillStyle = '#333';
+                  ctx.font = 'bold 16px sans-serif';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(car.name, 150, 280);
+                  ctx.font = '12px sans-serif';
+                  ctx.fillStyle = '#888';
+                  ctx.fillText('Mdari - فحص السيارة', 150, 305);
+                  const a = document.createElement('a');
+                  a.download = `qr-${car.name}.png`;
+                  a.href = canvas.toDataURL('image/png');
+                  a.click();
+                  toast({ title: "تم التحميل", description: "تم تحميل صورة الباركود" });
+                };
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+              }} className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-primary/30 transition-all text-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                <span className="text-[10px] font-bold">حفظ صورة</span>
               </button>
             </div>
           </motion.div>
@@ -1053,40 +1841,36 @@ function CarActionsMenu({ car, userPlan, onUpdate, onDelete }: { car: CarData; u
 
 function InviteDriverButton({ carId, carName, userPlan, onInvited }: { carId: string; carName: string; userPlan: string; onInvited: (name: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const [phoneOrEmail, setPhoneOrEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    
-    // Programmatic enforcement: Only Family plans can invite drivers
-    if (userPlan !== "family_small" && userPlan !== "family_large") {
-      toast({ title: "ترقية مطلوبة", description: "إضافة أفراد العائلة متاحة فقط في خطط العائلة.", variant: "destructive" });
-      setError("هذه الميزة متاحة فقط لخطط العائلة.");
-      return;
-    }
+    if (!phoneOrEmail) return;
 
     setSubmitting(true);
     setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if(!session?.user) throw new Error("يجب تسجيل الدخول");
+      if (!session?.user) throw new Error("يجب تسجيل الدخول");
+
+      // Convert phone number to email format for lookup
+      const emailToSearch = phoneOrEmail.includes("@") ? phoneOrEmail : `${phoneOrEmail}@mdari.local`;
 
       // 1. Check if user with that email already exists
-      const { data: users, error: userError } = await supabase.from("users").select("id, name, role").eq("email", email).limit(1);
-      if(userError) throw userError;
-      
-      if(users && users.length > 0) {
+      const { data: users, error: userError } = await supabase.from("users").select("id, name, role").eq("email", emailToSearch).limit(1);
+      if (userError) throw userError;
+
+      if (users && users.length > 0) {
         // Driver already exists. Link immediately.
         const driver = users[0];
-        
+
         // Update user role to 'both' if they were 'manager' or 'admin', else 'driver'
         const newRole = driver.role === "manager" || driver.role === "admin" ? "both" : "driver";
-        if(driver.role !== newRole) {
-           await supabase.from("users").update({ role: newRole }).eq("id", driver.id);
+        if (driver.role !== newRole) {
+          await supabase.from("users").update({ role: newRole }).eq("id", driver.id);
         }
 
         // Assign to car
@@ -1095,18 +1879,18 @@ function InviteDriverButton({ carId, carName, userPlan, onInvited }: { carId: st
           driver_name: driver.name || "سائق"
         }).eq("id", carId);
 
-        if(carError) throw carError;
-        
+        if (carError) throw carError;
+
         onInvited(driver.name || "سائق");
         toast({ title: "تم!", description: "تم ربط السائق بالسيارة بنجاح (مستخدم مسجل مسبقاً)" });
       } else {
         // Driver does NOT exist. Create invitation.
         const { error: invErr } = await supabase.from("invitations").insert({
           car_id: carId,
-          driver_email: email,
+          driver_email: emailToSearch,
           manager_id: session.user.id
         });
-        
+
         if (invErr) {
           if (invErr.code === '23505') {
             throw new Error("هذا السائق لديه دعوة مسبقة قيد الانتظار لهذة السيارة");
@@ -1114,15 +1898,12 @@ function InviteDriverButton({ carId, carName, userPlan, onInvited }: { carId: st
           throw invErr;
         }
 
-        // Note: Edge functions / Supabase triggers can send the actual email, 
-        // For now, in a backend-less setup, the row insertion is enough to show pending.
-        
         onInvited("سائق مدعو");
         toast({ title: "تم!", description: "تم إرسال دعوة للمستخدم للتسجيل" });
       }
-      
+
       setIsOpen(false);
-      setEmail("");
+      setPhoneOrEmail("");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "حدث خطأ");
     }
@@ -1144,15 +1925,15 @@ function InviteDriverButton({ carId, carName, userPlan, onInvited }: { carId: st
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">أدخل البريد الإلكتروني للسائق. إذا كان مسجلاً سيتم ربطه مباشرة، وإلا سيُنشأ له حساب تلقائياً.</p>
+            <p className="text-xs text-muted-foreground mb-4">أدخل رقم جوال السائق. إذا كان مسجلاً سيتم ربطه مباشرة، وإلا ستُنشأ دعوة للتسجيل.</p>
             {error && <p className="text-destructive text-xs mb-3 p-2 bg-destructive/10 rounded-lg border border-destructive/20">{error}</p>}
             <form onSubmit={handleInvite} className="space-y-4">
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="driver@email.com"
+              <input type="text" value={phoneOrEmail} onChange={e => setPhoneOrEmail(e.target.value)} placeholder="05xxxxxxxx"
                 required dir="ltr" className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground focus:border-primary outline-none text-sm transition-colors" />
               <div className="flex gap-3">
                 <button type="button" onClick={() => setIsOpen(false)} className="flex-1 py-2.5 rounded-xl border border-border text-foreground hover:bg-black/5 text-sm font-medium transition-colors">إلغاء</button>
                 <button type="submit" disabled={submitting} className="flex-[2] py-2.5 rounded-xl bg-primary text-white text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                  {submitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><Mail className="w-4 h-4" /> إرسال الدعوة</>}
+                  {submitting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><UserPlus className="w-4 h-4" /> إرسال الدعوة</>}
                 </button>
               </div>
             </form>
@@ -1182,9 +1963,9 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
     try {
       const dashboardLabel = toggles.dashboard === "green" ? "لا توجد" : toggles.dashboard === "yellow" ? "تحذير بسيط" : "تحذير خطير";
       const finalNotes = `[لوحة التحذيرات: ${dashboardLabel}]${notes ? `\nملاحظات السائق:\n${notes}` : ""}`;
-      
+
       const { data: { session } } = await supabase.auth.getSession();
-      if(!session?.user) throw new Error("يجب تسجيل الدخول");
+      if (!session?.user) throw new Error("يجب تسجيل الدخول");
 
       const { error: reportErr } = await supabase.from("driver_reports").insert({
         car_id: carId,
@@ -1197,11 +1978,11 @@ function ReportModal({ carId, carName, onReportSubmitted }: { carId: string; car
         notes: finalNotes || null,
       });
 
-      if(reportErr) throw reportErr;
-      
+      if (reportErr) throw reportErr;
+
       const now = new Date().toISOString();
       const { error: carUpdErr } = await supabase.from("cars").update({ last_report_date: now }).eq("id", carId);
-      if(carUpdErr) throw carUpdErr;
+      if (carUpdErr) throw carUpdErr;
       setSuccess(true);
       if (onReportSubmitted) onReportSubmitted(new Date().toISOString());
       setTimeout(() => { setIsOpen(false); setSuccess(false); setMileage(""); setNotes(""); }, 2000);
